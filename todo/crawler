@@ -1,0 +1,20 @@
+* refresh own index by crawling docs.python.org/3/library (= base)
+* skip everything not relative to base
+* construct pagerank url-id map
+
+note: very few documents but a lot of internal references
+
+* for every link that is an anchor: (1)
+*   parse contents under its anchor link
+
+algorithm (1)
+
+a <- link to a literal, i.e. has a permalink
+#validate a has permalink and html id matches
+dl <- the dl a points to
+assert (dl.first_child(dt).id == a.split("#")[-1])
+  # e.g. docs.python.org/3/library/time.html#time.struct_time
+  # dt.id == "time.struct_time"
+optional assert (dl.first_child(a).href == "#" + a.split("#")[-1])
+parse all links from within dl.dd
+

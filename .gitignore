@@ -1,0 +1,8 @@
+*.sw[op]
+__pycache__
+*.pyc
+
+*.zip
+
+literature
+

@@ -1,0 +1,39 @@
+
+BASIC IR PROCEDURE
+
+data acquisition :
+  Scrapy
+document and query indexing :
+  code query->AST-> LINKED REPR <-documents<-python docs
+ranking :
+  Whoosh.BM25 or similar
+system evaluation :
+  relevance judgement, hardly automatizable
+
+
+
+
+USE CASE:
+
+Define a machine M that accepts as input a file of text
+
+def M(file):
+  1. if file contains invalid Python syntax:
+        reject
+  2. parse file into ast
+  3. for document in documents:
+        calculate tree edit distance between ast and document.ast
+  4. return top 10 documents ranked by similarity according to edit distance
+
+
+todo:
+* source code parsing
+* web frontend ui
+* backend plumbings
+* local python source crawler
+* tree edit distance algorithm (how to cache?)
+  - might be similar to plagiarism checking
+* crawling python docs
+
+
+
