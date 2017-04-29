@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+
+{% block body_content %}
+<h2>this is what we managed to figure out:</h2>
+{% if errors %}
+<h2>Your code has at least one syntax error:</h2>
+{{ errors }}
+{% else %}
+<table>
+  <tr>
+    <th>Node</th>
+    <th>Count</th>
+  </tr>
+  {% for node, count in parsed_spaghetti %}
+  <tr>
+    <td>{{ node }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+{% endif %}
+{% endblock %}
