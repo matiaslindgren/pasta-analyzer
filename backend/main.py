@@ -5,6 +5,7 @@ import collections
 flask_app = flask.Flask(__name__)
 
 def count_syntax(source_string):
+    #TODO: extract and chop at least Call and Load nodes
     c = collections.Counter()
     class NodeVisitor(ast.NodeVisitor):
         def generic_visit(self, node):
@@ -22,6 +23,7 @@ def parse():
     render_context = dict()
     try:
         given_spaghetti = flask.request.form['spaghetti']
+        # todo sort by keys
         render_context["parsed_spaghetti"] = count_syntax(given_spaghetti).items()
     except SyntaxError as syntax_error:
         render_context["errors"] = str(syntax_error)
