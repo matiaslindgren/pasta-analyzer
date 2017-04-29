@@ -11,5 +11,7 @@ def url_to_keyword(url):
     s = re.sub("({})|({})|({})".format(BASEURL, '/', '\.html'), "", url)
     if "#" in s:
         s = s.split("#")[-1]
+    return s
+
 
 
