@@ -3,6 +3,9 @@ BASIC IR PROCEDURE
 
 data acquisition :
   Scrapy
+  problems:
+  1. if, else, for, while exist both in English and Python
+    -> if ambiguous names can be detected (always in <pre> or smthn), alter the saved document (<pre>if</pre> -->> if-statement)
 document and query indexing :
   code query->AST-> LINKED REPR <-documents<-python docs
 ranking :

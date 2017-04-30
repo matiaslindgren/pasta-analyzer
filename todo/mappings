@@ -1,0 +1,5 @@
+Some kind of mapping from the ast nodes to pydocs urls must exist.
+Whether the mapping is automatic or manual, it must make sense, i.e. usually return relevant documents.
+
+
+
