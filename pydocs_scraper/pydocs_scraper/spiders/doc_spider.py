@@ -72,8 +72,8 @@ class TutorialSpider(scrapy.Spider):
         self.logger.debug("Parsing section {}".format(section_url))
         for subsection in section.xpath(PATTERN.CHILD_PAGE_SECTIONS):
             yield from self.parse_section(subsection)
-        snipped_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
-        code_snippets = list(map(parse_highlighted_code, snipped_selector))
+        snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
+        code_snippets = list(map(parse_highlighted_code, snippet_selector))
         yield {
             "url": section_url,
             "code_snippets": code_snippets
