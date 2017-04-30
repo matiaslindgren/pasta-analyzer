@@ -7,7 +7,11 @@ data acquisition :
   1. if, else, for, while exist both in English and Python
     -> if ambiguous names can be detected (always in <pre> or smthn), alter the saved document (<pre>if</pre> -->> if-statement)
 document and query indexing :
+  Whoosh
+  document := html section with permalink
   code query->AST-> LINKED REPR <-documents<-python docs
+  how the hell to implement LINKED REPR?
+  AST node ->
 ranking :
   Whoosh.BM25 or similar
 system evaluation :
