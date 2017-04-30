@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
+from scrapy.exceptions import DropItem
 
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+class DuplicatesPipeline:
+    def __init__(self):
+        self.processed_urls = set()
 
-
-class PydocsScraperPipeline(object):
     def process_item(self, item, spider):
+        item_url = item['url']
+        if item_url in self.processed_urls:
+            raise DropItem("Section {} already parsed".format(item_url))
+        self.processed_urls.add(item_url)
         return item
+
