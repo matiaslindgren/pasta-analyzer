@@ -1,4 +1,6 @@
 import ast
+import collections
+import itertools
 
 
 def has_children(node):
@@ -26,7 +28,7 @@ class NodeHasher():
 
     def visit(self, node):
         if has_depth_at_least(node, self.min_depth):
-            yield dump(node, False, self.drop_field_names)
+            yield node
             for field, value in ast.iter_fields(node):
                 if isinstance(value, list):
                     for item in value:
@@ -34,6 +36,12 @@ class NodeHasher():
                             yield from self.visit(item)
                 elif isinstance(value, ast.AST):
                     yield from self.visit(value)
+
+    def hashed_nodes(self, root):
+        buckets = collections.defaultdict(list)
+        for node in self.visit(root):
+            buckets[node.__class__.__name__].append(node)
+        return buckets
 
 
 def dump(node, annotate_fields=True, drop_field_names=None):
@@ -65,6 +73,30 @@ def dump(node, annotate_fields=True, drop_field_names=None):
     return _format(node)
 
 
+# TODO temporary
+def tree_similarity(root_1, root_2):
+    depth_1 = max(dive(root_1, 0))
+    depth_2 = max(dive(root_2, 0))
+    return (depth_1+depth_2)/(2*max(depth_1, depth_2))
+
+
+def get_subtree_clones(root, similarity_threshold=0.5):
+    def prune_clones(node, as_key):
+        for child in ast.walk(node):
+            if child in clones:
+                del clones[as_key(child)]
+    clones = dict()
+    node_visitor = NodeHasher()
+    for bucket in node_visitor.hashed_nodes(root).values():
+        for node_1, node_2 in itertools.combinations(bucket, 2):
+            print(node_1, node_2)
+            if tree_similarity(node_1, node_2) > similarity_threshold:
+                prune_clones(node_1, dump)
+                prune_clones(node_2, dump)
+                clones[dump(node_1)] = node_1
+                clones[dump(node_2)] = node_2
+    return set(clones.keys())
+
 # similarity = 2*shared_nodes/(2*shared_nodes + different_nodes(tree_1) + different_nodes(tree_2))
 # mass_threshold = some_constant # amount of nodes
 
@@ -77,25 +109,6 @@ def dump(node, annotate_fields=True, drop_field_names=None):
 # 1. iterate all subtrees and find clones:
 
 #
-# clones = set()
-# hash_table = table()
-# for subtree in tree.all_subtrees():
-#   if not too_big(subtree, mass_threshold):
-#     # trees which are similar: (tree % identifiers) -> same bin (wat?)
-#     hash_table.add_to_bucket(subtree)
-# for bucket in hash_table.buckets():
-#   for subtree_1 in bucket:
-#     for subtree_2 in bucket:
-#       if subtree_1 == subtree_2:
-#         continue
-#       if compare_trees(subtree_1, subtree_2) > similarity_threshold:
-#         for sub in subtree_1.all_subtrees():
-#           if sub in clones:
-#             clones.remove_pair(sub)
-#         for sub in subtree_2.all_subtrees():
-#           if sub in clones:
-#             clones.remove_pair(sub)
-#         clones.add((subtree_1, subtree_2))
 #
 
 # 2. sequence detection:
