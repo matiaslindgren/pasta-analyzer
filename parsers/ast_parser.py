@@ -9,12 +9,8 @@ def dive(node, h):
     for child in ast.iter_child_nodes(node):
         yield from dive(child, h+1)
 
-def too_big(root, max_depth=2):
-    for _, depth in enumerate(dive(root, 0)):
-        if depth >= max_depth:
-            return True
-    return False
-
+def has_depth_at_least(root, max_depth):
+    return any(depth for _, depth in dive(root, 0) if depth > max_depth)
 
 class NodeHasher(ast.NodeVisitor):
     def __init__(self, min_depth=1, sensitivity=1):
@@ -26,10 +22,8 @@ class NodeHasher(ast.NodeVisitor):
             return {"name", "id"}
         return set()
 
-    def should_visit(self, node):
-        return any(depth for _, depth in dive(node, 0) if depth > self.min_depth)
     def visit(self, node):
-        if self.should_visit(node):
+        if has_depth_at_least(node, self.min_depth):
             # change print to hash
             print(dump(node, False, self.drop_field_names), end="\n\n")
             self.generic_visit(node)
