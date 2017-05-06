@@ -5,13 +5,13 @@ def has_children(node):
     return next(ast.iter_child_nodes(node), None) is not None
 
 def dive(node, h):
-    yield node, h
+    yield h
     for child in ast.iter_child_nodes(node):
         yield from dive(child, h+1)
 
 
 def has_depth_at_least(root, max_depth):
-    return any(depth for _, depth in dive(root, 0) if depth > max_depth)
+    return any(depth > max_depth for depth in dive(root, 0))
 
 
 class NodeHasher():
