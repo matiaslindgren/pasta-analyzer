@@ -3,7 +3,6 @@ optimization todo:
     * invent some single sensitivity parameter which cascades everywhere
     * preprocess every ast
     * hash value of a tree node is the string of the nodes attrs concatenated with the ones of its children
-
 """
 import ast
 import collections
@@ -20,6 +19,9 @@ def has_depth_at_least(root, max_depth):
 
 
 class NodeProcessor():
+    """
+    Preprocess ASTs by grouping subtrees together that are similar when their string dumps are compared.
+    """
     def __init__(self, min_depth=1, drop_field_names=None, drop_node_names=None):
         if drop_field_names is None:
             drop_field_names = {"id", "arg", "name"}
@@ -30,115 +32,62 @@ class NodeProcessor():
         self.drop_node_names = drop_node_names
         self.buckets = collections.defaultdict(list)
 
-    def visit(self, node, parent):
+    def visit(self, node):
         if not has_depth_at_least(node, self.min_depth):
             return
         if node.__class__.__name__ not in self.drop_node_names:
-            yield node, parent
+            yield node
         for _, value in ast.iter_fields(node):
             if isinstance(value, list):
                 for item in value:
                     if isinstance(item, ast.AST):
-                        yield from self.visit(item, node)
+                        yield from self.visit(item)
             elif isinstance(value, ast.AST):
-                yield from self.visit(value, node)
+                yield from self.visit(value)
 
-    def partition_tree(self, root):
-        root.parent = None
-        for node, parent in self.visit(root, None):
-            key = dump(node, False, drop_field_names=self.drop_field_names)
-            node.parent = parent
-            self.buckets[key].append(node)
+    def add_tree(self, root):
+        for node in self.visit(root):
+            if not hasattr(node, "short_key"):
+                node.short_key = dump(node, False, drop_field_names=self.drop_field_names)
+            if not hasattr(node, "long_key"):
+                node.long_key = dump(node, True)
+            if not hasattr(node, "root_node"):
+                node.root_node = root
+            self.buckets[node.short_key].append(node)
 
-
-def tree_similarity(nodes_1, nodes_2):
-    """
-    Return the tree similarity of two trees using the formula from Baxter et al.
-    similarity = 2*S/(2*S + L + R)
-    where:
-        S = number of shared nodes
-        L = number of nodes in sub-tree 1 not in sub-tree 2
-        R = number of nodes in sub-tree 2 not in sub-tree 1
-
-    TODO:
-        - commutative operators
-        - similarity strictness
-            things to ignore:
-              * names: 'id' (variable), 'name' (function), 'arg' (in argument list)
-              * bodies, in functions, for loops etc
-    """
-    S = len(nodes_1 & nodes_2)
-    L = len(nodes_1 - nodes_2)
-    R = len(nodes_2 - nodes_1)
-    return 2*S/(2*S + L + R)
+    def get_sorted_buckets(self):
+        def longest_node_key_length(bucket):
+            return max(map(lambda node: len(node.short_key), bucket))
+        sorted_buckets = list(b for b in self.buckets.values() if len(b) > 1)
+        sorted_buckets.sort(key=longest_node_key_length, reverse=True)
+        return sorted_buckets
 
 
-#TODO: optimize using for example Valientes Chapter 4 Tree Isomorphism
-def get_subtree_clones(root_1, root_2, similarity_threshold=0.8):
-    def prune_clones(node, clones, key_function):
-        # print("pruning from {} clones".format(len(clones)))
-        for child in ast.walk(node):
-            if key_function(child) in clones:
-                # print("delete\n{}\nunder\n{}".format(dump(child), dump(node)))
-                del clones[key_function(child)]
-        # print("done pruning, {} clones remain".format(len(clones)))
-    def all_nodes(root):
-        return set(dump(n, drop_field_names={"id", "name", "arg"})  for n, _ in preorder(root))
-    def already_included(node, clones):
-        for _, clone in clones.items():
-            for child in ast.walk(clone):
-                if dump(child, drop_field_names={"id","name","arg"}) == dump(node, drop_field_names={"id","name","arg"}):
-                    return True
-        return False
-    clones = dict()
-    node_visitor = NodeProcessor(min_depth=2)
-    print("partition tree 1")
-    node_visitor.partition_tree(root_1)
-    print("partition tree 2")
-    node_visitor.partition_tree(root_2)
-    print("get clones")
-    i = 1
-    for bucket in node_visitor.buckets.values():
-        # print("bucket {} with {} {} nodes and {} combinations".format(i, len(bucket), bucket[0].__class__.__name__, len(tuple(itertools.combinations(bucket, 2)))))
-        i+=1
-        # Compare every node in the bucket to each other, buckets
-        # with one node are ignored
+def get_similar_lines(root_1, root_2):
+    node_processor = NodeProcessor(min_depth=2)
+    node_processor.add_tree(root_1)
+    node_processor.add_tree(root_2)
+    similar_lines = dict()
+    cumulative_dump = ''
+    for bucket in node_processor.get_sorted_buckets():
         for node_1, node_2 in itertools.combinations(bucket, 2):
-            # print("comparing\n{0}\n{1}\nto\n{3}\n{2}".format(dump(node_1), dump(node_1, drop_field_names={"id", "name","arg"}), dump(node_2, drop_field_names={"id","name","arg"}), dump(node_2)))
-            # print("similarity: {}".format(tree_similarity(all_nodes(node_1), all_nodes(node_2))))
-            # print("get similarity")
-            if tree_similarity(all_nodes(node_1), all_nodes(node_2)) > similarity_threshold:
-                # if already_included(node_1, clones) or already_included(node_2, clones):
-                    # continue
-                # prune_clones(node_1, clones, dump)
-                # prune_clones(node_2, clones, dump)
-                clones[(dump(node_1), dump(node_2))] = (node_1, node_2)
-        # print("currently {} possible clones ".format(len(clones)))
-    print("done searching for clones, return")
-    return clones
-
-
-def prune_clones(clones, similarity_threshold=0.7):
-    def all_nodes(root):
-        return set(dump(n, drop_field_names={"id", "name", "arg"})  for n, _ in preorder(root))
-    not_checked = list(clones.values())
-    while not_checked:
-        print("{} pairs not checked".format(len(not_checked)))
-        node_1, node_2 = not_checked.pop()
-        if node_1.__class__.__name__ == "Module":
-            continue
-        parent_1, parent_2 = node_1.parent, node_2.parent
-        if tree_similarity(all_nodes(parent_1), all_nodes(parent_2)) > similarity_threshold:
-            key = (dump(node_1), dump(node_2))
-            if key in clones:
-                del clones[key]
-            clones[(dump(parent_1), dump(parent_2))] = (parent_1, parent_2)
-            not_checked.append((parent_1, parent_2))
+            if node_1.root_node is node_2.root_node:
+                continue
+            key = (node_1.short_key, node_2.short_key)
+            if not (key in similar_lines or
+                    key[0] in cumulative_dump or
+                    key[1] in cumulative_dump):
+                similar_lines[key] = (node_1.lineno, node_2.lineno)
+            if key[0] not in cumulative_dump:
+                cumulative_dump += "\n{}\n".format(key[0])
+            if key[1] not in cumulative_dump:
+                cumulative_dump += "\n{}\n".format(key[1])
+    return sorted(similar_lines.values())
 
 
 def name_dump(root):
     for node, depth in preorder(root):
-        print(' '*depth + node.__class__.__name__)
+        print(' '*depth + node.__class__.__name__ + ",".join(map(str, ast.iter_fields(node))))
 
 
 def dump(node, annotate_fields=True, include_attributes=False, drop_field_names=None):
