@@ -1,8 +1,10 @@
 {% extends 'layout.html' %}
 
+{% block head_script_includes %}
+<link rel="stylesheet" href="static/css/pygments.css">
+{% endblock %}
 
 {% block body_content %}
-<h2>this is what we managed to figure out:</h2>
 {% if errors %}
 <h2>Your code has at least one syntax error:</h2>
 {{ errors }}
@@ -12,16 +14,15 @@
   <li> https://en.wikipedia.org/wiki/Context-free_grammar </li>
 </ul>
 {% else %}
-<table>
-  <tr>
-    <th>Node</th>
-    <th>Count</th>
-  </tr>
-  {% for node, count in parsed_spaghetti %}
-  <tr>
-    <td>{{ node }}</td>
-    <td>{{ count }}</td>
-  </tr>
+<h2>The submitted code is similar to these snippets</h2>
+  <ul style="list-style-type:none">
+  {% for match in similar %}
+  <li>
+    <div class="result">
+      <a href="{{ match.url }}">{{ match.section_title }}</a>
+      {{ match.source|safe }}
+    </div>
+  </li>
   {% endfor %}
 {% endif %}
 {% endblock %}

@@ -1,25 +1,11 @@
 import flask
-import ast
-import collections
+import json
+import pygments
+from pygments.lexers import Python3Lexer
+from pygments.formatters import HtmlFormatter
+from ..parsers import ast_parser
 
 flask_app = flask.Flask(__name__)
-
-def count_syntax(source_string):
-    #TODO: extract and chop at least Call and Load nodes
-    #NOTE, this is not trivial, some sensible consistency must be invented before implementing this any further
-    counted_nodes = collections.Counter()
-    class NodeVisitor(ast.NodeVisitor):
-        def generic_visit(self, node):
-            node_name = node.__class__.__name__
-            if node_name == "Call" and hasattr(node, 'func') and hasattr(node.func, 'id'):
-                counted_nodes["Function:" + node.func.id] += 1
-                # else:
-                    # raise RuntimeError("Found a Call node without 'func' attribute, Call node has fields {}".format(list(ast.iter_fields(node))))
-            else:
-                counted_nodes[node_name] += 1
-            super().generic_visit(node)
-    NodeVisitor().visit(ast.parse(source_string))
-    return counted_nodes
 
 @flask_app.route("/")
 def index():
@@ -31,12 +17,63 @@ def parse():
     try:
         # Parse spaghetti
         raw_text = flask.request.form['spaghetti']
-        name_count = count_syntax(raw_text)
-        sorted_name_counts = ((key, name_count[key]) for key in sorted(name_count.keys()))
-        render_context["parsed_spaghetti"] = sorted_name_counts
+        # TODO: paging
+        similar_snippets = get_similar_snippets(raw_text)
+        render_context["similar"] = similar_snippets
     except SyntaxError as syntax_error:
         render_context["errors"] = str(syntax_error)
     return flask.render_template('parsed.html', **render_context)
+
+# TEMP, should be from DB
+def all_snippets():
+    with open("out.json") as f:
+        snippets = json.load(f)
+    for page in snippets:
+        if not page["code_snippets"]:
+            continue
+        yield page
+
+
+def html_highlight(code, line_numbers):
+    format_options = {
+        "hl_lines": line_numbers,
+    }
+    return pygments.highlight(
+        code,
+        Python3Lexer(),
+        HtmlFormatter(**format_options)
+    )
+
+
+def get_similar_snippets(code):
+    similar = list()
+    total_snippets_count = 0
+    for result in all_snippets(): # snippet is actually iterable of snippets
+        for snippet in result["code_snippets"]:
+            total_snippets_count += 1
+            line_numbers = ast_parser.get_similar_lines(code, snippet, 2)
+            if not line_numbers:
+                continue
+            print("{} lines in common for:".format(len(line_numbers)))
+            print("-"*30)
+            print(code)
+            print("-"*30)
+            print(snippet)
+            print("-"*30)
+            print("numbers:")
+            for t in line_numbers:
+                print(t)
+            print()
+            similar.append({
+                "section_title": result["title"],
+                "url": result["url"],
+                "source": html_highlight(snippet, [t[1] for t in line_numbers]),
+                "similar_lines": len(line_numbers)
+            })
+    similar.sort(key=lambda d: d["similar_lines"], reverse=True)
+    print("compared {} snippets".format(total_snippets_count))
+    print("returning {} similar similar_snippets".format(len(similar)))
+    return similar
 
 if __name__ == "__main__":
     flask_app.run()
