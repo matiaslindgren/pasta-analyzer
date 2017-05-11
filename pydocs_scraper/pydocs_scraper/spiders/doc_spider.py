@@ -3,6 +3,7 @@ Scrapy spiders for crawling the Python docs.
 """
 import scrapy
 import re
+import ast
 
 
 class PATTERN:
@@ -15,7 +16,8 @@ class PATTERN:
     LIST_PAGE_SECTIONS   = "./{}/dl".format(_SECTION_DIV)
     TOCTREE_TOP_LINKS    = "//ul/li[contains(@class, 'toctree-l1')]/a"
     SECTION_LINKS        = ".//dt/a[contains(@class, 'headerlink')]/@href"
-    HEADER_SECTION_LINKS = "|".join("(.//h{}/a[contains(@class, 'headerlink')]/@href)".format(i) for i in range(1, 5))
+    SECTION_HEADER_TEXT  = "|".join("(./h{}/text())".format(i) for i in range(1, 4))
+    HEADER_SECTION_LINKS = "|".join("(.//h{}/a[contains(@class, 'headerlink')]/@href)".format(i) for i in range(1, 4))
     INTERNAL_LINKS       = ".//dd//a[contains(@class, 'internal reference') or contains(@class, 'reference internal')]/@href"
     CHILD_CODE_SNIPPETS  = "./div[contains(@class, 'highlight-python3')]"
     HREF                 = ".//@href"
@@ -59,23 +61,36 @@ class TutorialSpider(scrapy.Spider):
         if not sections:
             self.logger.warning("Page has no parsable sections")
             return None
-        yield from self.parse_section(sections[0])
+        # As of May 2017, every section (1. Introduction, 2. ...)
+        # in the Python docs have their own html document with only
+        # one root level section, with all subsections nested within
+        yield from self.parse_section(sections[0], page)
 
-    def parse_section(self, section):
+    def parse_section(self, section, page):
         """
         Recursively yield dicts of url string and code snippets list within 'section' and all its nested sections.
         The data within a nested section is not included into the data of its parent, unless it is explicitly duplicate in the html.
         """
         def get_section_url(s):
             return s.xpath(PATTERN.HEADER_SECTION_LINKS).extract_first()
+        def get_section_title(s):
+            return s.xpath(PATTERN.SECTION_HEADER_TEXT).extract_first()
         section_url = get_section_url(section)
         self.logger.debug("Parsing section {}".format(section_url))
         for subsection in section.xpath(PATTERN.CHILD_PAGE_SECTIONS):
-            yield from self.parse_section(subsection)
+            yield from self.parse_section(subsection, page)
         snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
-        code_snippets = list(map(parse_highlighted_code, snippet_selector))
+        code_snippets = map(parse_highlighted_code, snippet_selector)
+        valid_code = list()
+        for snippet in code_snippets:
+            try:
+                ast.parse(snippet)
+                valid_code.append(snippet)
+            except SyntaxError:
+                pass
         yield {
-            "url": section_url,
-            "code_snippets": code_snippets
+            "title": get_section_title(section),
+            "url": page.urljoin(section_url),
+            "code_snippets": valid_code
         }
 
