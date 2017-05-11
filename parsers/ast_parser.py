@@ -63,25 +63,28 @@ class NodeProcessor():
         return sorted_buckets
 
 
-def get_similar_lines(root_1, root_2):
-    node_processor = NodeProcessor(min_depth=2)
+def get_similar_lines(source_1, source_2, min_depth=2):
+    root_1 = ast.parse(source_1)
+    root_2 = ast.parse(source_2)
+    node_processor = NodeProcessor(min_depth=min_depth)
     node_processor.add_tree(root_1)
     node_processor.add_tree(root_2)
     similar_lines = dict()
-    cumulative_dump = ''
+    added_lines = ''
     for bucket in node_processor.get_sorted_buckets():
         for node_1, node_2 in itertools.combinations(bucket, 2):
             if node_1.root_node is node_2.root_node:
                 continue
             key = (node_1.short_key, node_2.short_key)
             if not (key in similar_lines or
-                    key[0] in cumulative_dump or
-                    key[1] in cumulative_dump):
-                similar_lines[key] = (node_1.lineno, node_2.lineno)
-            if key[0] not in cumulative_dump:
-                cumulative_dump += "\n{}\n".format(key[0])
-            if key[1] not in cumulative_dump:
-                cumulative_dump += "\n{}\n".format(key[1])
+                    key[0] in added_lines or
+                    key[1] in added_lines):
+                if hasattr(node_1, "lineno") and hasattr(node_2, "lineno"):
+                    similar_lines[key] = (node_1.lineno, node_2.lineno)
+            if key[0] not in added_lines:
+                added_lines += "\n{}\n".format(key[0])
+            if key[1] not in added_lines:
+                added_lines += "\n{}\n".format(key[1])
     return sorted(similar_lines.values())
 
 
