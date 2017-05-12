@@ -51,24 +51,14 @@ def get_similar_snippets(code):
     for result in all_snippets(): # snippet is actually iterable of snippets
         for snippet in result["code_snippets"]:
             total_snippets_count += 1
-            line_numbers = ast_parser.get_similar_lines(code, snippet, 2)
-            if not line_numbers:
+            _, snippet_linenos_similar = ast_parser.get_similar_lines(code, snippet, 2)
+            if not snippet_linenos_similar:
                 continue
-            print("{} lines in common for:".format(len(line_numbers)))
-            print("-"*30)
-            print(code)
-            print("-"*30)
-            print(snippet)
-            print("-"*30)
-            print("numbers:")
-            for t in line_numbers:
-                print(t)
-            print()
             similar.append({
                 "section_title": result["title"],
                 "url": result["url"],
-                "source": html_highlight(snippet, [t[1] for t in line_numbers]),
-                "similar_lines": len(line_numbers)
+                "source": html_highlight(snippet, list(snippet_linenos_similar)),
+                "similar_lines": len(snippet_linenos_similar)
             })
     similar.sort(key=lambda d: d["similar_lines"], reverse=True)
     print("compared {} snippets".format(total_snippets_count))
