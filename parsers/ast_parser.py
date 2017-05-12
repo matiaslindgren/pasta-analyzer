@@ -44,9 +44,7 @@ class NodeProcessor():
     def add_tree(self, root):
         for node in self.visit(root):
             if not hasattr(node, "short_key"):
-                node.short_key = dump(node, False, drop_field_names=self.drop_field_names)
-            if not hasattr(node, "long_key"):
-                node.long_key = dump(node, True)
+                node.short_key = dump(node, True)
             if not hasattr(node, "root_node"):
                 node.root_node = root
             self.buckets[node.short_key].append(node)
@@ -87,9 +85,11 @@ def get_similar_lines(source_1, source_2, min_depth=2):
             # Add linenumbers of all lines in subtrees of the matched nodes
             if node_1.short_key not in added_keys:
                 add_all_children_linenumbers(node_1, matched_linenumbers_1)
-                added_keys += "\n{}\n".format(node_1.short_key)
             if node_2.short_key not in added_keys:
                 add_all_children_linenumbers(node_2, matched_linenumbers_2)
+            if node_1.short_key not in added_keys:
+                added_keys += "\n{}\n".format(node_1.short_key)
+            if node_2.short_key not in added_keys:
                 added_keys += "\n{}\n".format(node_2.short_key)
     return matched_linenumbers_1, matched_linenumbers_2
 
