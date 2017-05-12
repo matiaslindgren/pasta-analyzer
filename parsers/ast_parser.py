@@ -1,9 +1,3 @@
-"""
-optimization todo:
-    * invent some single sensitivity parameter which cascades everywhere
-    * preprocess every ast
-    * hash value of a tree node is the string of the nodes attrs concatenated with the ones of its children
-"""
 import ast
 import collections
 import itertools
@@ -14,6 +8,7 @@ def preorder(node, h=0):
     for child in ast.iter_child_nodes(node):
         yield from preorder(child, h+1)
 
+
 def has_depth_at_least(root, max_depth):
     return any(depth > max_depth for _, depth in preorder(root))
 
@@ -21,6 +16,7 @@ def has_depth_at_least(root, max_depth):
 class NodeProcessor():
     """
     Preprocess ASTs by grouping subtrees together that are similar when their string dumps are compared.
+    The similarity threshold can be controlled by altering the drop_field_names set.
     """
     def __init__(self, min_depth=1, drop_field_names=None, drop_node_names=None):
         if drop_field_names is None:
@@ -63,29 +59,39 @@ class NodeProcessor():
         return sorted_buckets
 
 
+def add_all_children_linenumbers(node, linenumber_set):
+    for child in ast.walk(node):
+        if hasattr(child, "lineno") and child.lineno not in linenumber_set:
+            linenumber_set.add(child.lineno)
+
+
 def get_similar_lines(source_1, source_2, min_depth=2):
+    """
+    Compare two source strings to each other and get return the line numbers of similar lines.
+    Specify min_depth to control the granularity of comparing lines for similarity.
+    Higher values match only larger constructs.
+    """
     root_1 = ast.parse(source_1)
     root_2 = ast.parse(source_2)
     node_processor = NodeProcessor(min_depth=min_depth)
     node_processor.add_tree(root_1)
     node_processor.add_tree(root_2)
-    similar_lines = dict()
-    added_lines = ''
+    matched_linenumbers_1 = set()
+    matched_linenumbers_2 = set()
+    added_keys = ''
     for bucket in node_processor.get_sorted_buckets():
         for node_1, node_2 in itertools.combinations(bucket, 2):
+            # Don't compare nodes in the same tree
             if node_1.root_node is node_2.root_node:
                 continue
-            key = (node_1.short_key, node_2.short_key)
-            if not (key in similar_lines or
-                    key[0] in added_lines or
-                    key[1] in added_lines):
-                if hasattr(node_1, "lineno") and hasattr(node_2, "lineno"):
-                    similar_lines[key] = (node_1.lineno, node_2.lineno)
-            if key[0] not in added_lines:
-                added_lines += "\n{}\n".format(key[0])
-            if key[1] not in added_lines:
-                added_lines += "\n{}\n".format(key[1])
-    return sorted(similar_lines.values())
+            # Add linenumbers of all lines in subtrees of the matched nodes
+            if node_1.short_key not in added_keys:
+                add_all_children_linenumbers(node_1, matched_linenumbers_1)
+                added_keys += "\n{}\n".format(node_1.short_key)
+            if node_2.short_key not in added_keys:
+                add_all_children_linenumbers(node_2, matched_linenumbers_2)
+                added_keys += "\n{}\n".format(node_2.short_key)
+    return matched_linenumbers_1, matched_linenumbers_2
 
 
 def name_dump(root):
