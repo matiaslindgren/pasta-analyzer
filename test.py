@@ -1,90 +1,34 @@
 import unittest
 import parsers.ast_parser as ast_parser
-import ast
-import pprint
-import importlib
-
-
-class TestAllScrapedCodeIsValidSyntax(unittest.TestCase):
-    pass
-
-
 
 
 class TestTreeSimilarity(unittest.TestCase):
 
-    def _test_ast_parser(self, string1, string2):
-        print()
-        tree_1 = ast.parse(string1)
-        tree_2 = ast.parse(string2)
-        source1_linenos, source2_linenos = ast_parser.get_similar_lines(tree_1, tree_2)
-        print()
-        print("found {} clones".format(len(source2_linenos)))
-        print("source1:")
+    def _dump_with_similar_lines(self, string1, string2, lines1, lines2):
+        msg = "\nSource 1:\n\n"
         for n, line in enumerate(string1.splitlines(), start=1):
-            print(line + (" <<" if n in source1_linenos else ""))
-        print("-"*30)
-        print("source2:")
+            msg += line + (" <<" if n in lines1 else "") + "\n"
+        msg += "\nCompared to source 2:\n\n"
         for n, line in enumerate(string2.splitlines(), start=1):
-            print(line + (" <<" if n in source2_linenos else ""))
-        print()
+            msg += line + (" <<" if n in lines2 else "") + "\n"
+        return msg + "\n"
 
-    def _test_1(self):
+    def test_only_function_signature_equal(self):
         s1 = "def f(a, b, *args, c=0, d=None, e=tuple(), **kwargs):\n b += 2\n c += 3\n return e[0]"
         s2 = "def g_function(pos_arg1, pos_arg_a, *xs, i=0, nothing=None, default=tuple(), **more_kwargs):\n x = 2\n c = None\n return x + c"
-        self._test_ast_parser(s1, s2)
+        lines_1, lines_2 = ast_parser.get_similar_lines(s1, s2)
+        msg = self._dump_with_similar_lines(s1, s2, lines_1, lines_2) + "Function signature should be similar"
+        self.assertIn(1, lines_1, msg)
+        self.assertIn(1, lines_2, msg)
 
-    def test_2(self):
+    def test_equal_functions(self):
         s1 = "def f(a):\n b = 2\n c = 3\n return a + b + c"
         s2 = "def g(x):\n y = 2\n z = 3\n return x + y + z"
-        self._test_ast_parser(s1, s2)
-
-    def _test_3(self):
-        s1 = "class A:\n def __init__(self):\n  self.a = None\n\ndef g(x):\n y = 2\n z = 3\n return x + y + z"
-        s2 = "def g(x):\n y = 2\n z = 3\n return x + y + z"
-        self._test_ast_parser(s1, s2)
-
-    def _test_4(self):
-        s1 = r"""import os, argparse
-defaults = {'color': 'red', 'user': 'guest'}
-parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--user')
-parser.add_argument('-c', '--color')
-namespace = parser.parse_args()
-command_line_args = {k:v for k, v in vars(namespace).items() if v}
-combined = ChainMap(command_line_args, os.environ, defaults)
-print(combined['color'])
-print(combined['user'])"""
-        s2 = "command_line_args = {k:v for k, v in vars(namespace).items() if v}"
-        self._test_ast_parser(s1, s2)
-
-    def _test_5(self):
-        s1 = "a, b = 0, 1"
-        # s1 = "a, b = b, a+b"
-        s2 = """# Fibonacci numbers module
-
-def fib(n):    # write Fibonacci series up to n
-    a, b = 0, 1
-    while b < n:
-        print(b, end=' ')
-        a, b = b, a+b
-    print()
-
-def fib2(n):   # return Fibonacci series up to n
-    result = []
-    a, b = 0, 1
-    while b < n:
-        result.append(b)
-        a, b = b, a+b
-    return result
-"""
-        self._test_ast_parser(s1, s2)
-
-    # def _test_two_large_equal_modules(self):
-    #     inspect = importlib.import_module("inspect")
-    #     print("importing")
-    #     inspect_source = inspect.getsource(inspect)
-    #     self._test_ast_parser(inspect_source, inspect_source)
+        lines_1, lines_2 = ast_parser.get_similar_lines(s1, s2)
+        msg = self._dump_with_similar_lines(s1, s2, lines_1, lines_2) + "All lines should be equal"
+        for line in range(1, len(s1.splitlines())+1):
+            self.assertIn(line, lines_1, msg)
+            self.assertIn(line, lines_2, msg)
 
 
 if __name__ == "__main__":
