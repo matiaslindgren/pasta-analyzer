@@ -65,7 +65,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'pydocs_scraper.pipelines.DuplicatesPipeline': 100,
+    'pydocs_scraper.pipelines.EmptyCodePipeline': 100,
+    'pydocs_scraper.pipelines.DuplicatesPipeline': 200,
     # 'pydocs_scraper.spiders.doc_spider.WriterPipeline': 200
 }
 

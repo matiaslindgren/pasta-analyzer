@@ -26,8 +26,10 @@ def parse():
 
 # TEMP, should be from DB
 def all_snippets():
-    with open("out.json") as f:
-        snippets = json.load(f)
+    snippets = list()
+    for i in range(1, 3):
+        with open("out{}.json".format(i)) as f:
+            snippets.extend(json.load(f))
     for page in snippets:
         if not page["code_snippets"]:
             continue

@@ -11,3 +11,9 @@ class DuplicatesPipeline:
         self.processed_urls.add(item_url)
         return item
 
+class EmptyCodePipeline:
+    def process_item(self, item, spider):
+        if not item["code_snippets"]:
+            raise DropItem("Section {} contains no code".format(item["title"]))
+        return item
+
