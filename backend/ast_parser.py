@@ -1,7 +1,10 @@
 import ast
+import itertools
+from whoosh.analysis import Tokenizer
+from whoosh.analysis.acore import Token
 
 
-def is_python_source(code):
+def is_valid_code(code):
     if not isinstance(code, str):
         return False
     try:
@@ -11,10 +14,16 @@ def is_python_source(code):
     return True
 
 
-def preorder(node, h=0):
-    yield node, h
+def amount_of_nodes(code):
+    if not is_valid_code(code):
+        return 0
+    return len(list(ast.walk(ast.parse(code))))
+
+
+def preorder(node, depth=0):
+    yield node, depth
     for child in ast.iter_child_nodes(node):
-        yield from preorder(child, h+1)
+        yield from preorder(child, depth+1)
 
 
 def has_depth_at_least(root, max_depth):
@@ -71,7 +80,6 @@ def dump(node, annotate_fields=True, include_attributes=False,
         return repr(node)
     if not isinstance(node, ast.AST):
         raise TypeError('expected AST, got %r' % name(node))
-    yield _format(node, 0)
     for subtree, _ in preorder(node):
         if not tokenize_leaves and not has_depth_at_least(subtree, 1):
             continue
