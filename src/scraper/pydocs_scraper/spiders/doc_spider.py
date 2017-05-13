@@ -4,7 +4,7 @@ Scrapy spiders for crawling the Python docs.
 import scrapy
 import re
 import urllib
-import ast_parser
+import ast
 
 
 class PATTERN:
@@ -30,6 +30,22 @@ class PATTERN:
         ">>>",
         "...",
     )
+
+
+def is_valid_code(code):
+    if not isinstance(code, str):
+        return False
+    try:
+        ast.parse(code)
+    except SyntaxError:
+        return False
+    return True
+
+
+def amount_of_nodes(code):
+    if not is_valid_code(code):
+        return 0
+    return len(list(ast.walk(ast.parse(code))))
 
 
 def parse_highlighted_code(snippet_selector):
@@ -105,7 +121,7 @@ class LibrarySpider(scrapy.Spider):
         valid_code = list()
         skipped_count = 0
         for snippet in code_snippets:
-            if ast_parser.is_valid_code(snippet) and ast_parser.amount_of_nodes(snippet) > 1:
+            if is_valid_code(snippet) and amount_of_nodes(snippet) > 1:
                 valid_code.append(snippet)
             else:
                 skipped_count += 1
@@ -161,7 +177,7 @@ class TutorialSpider(scrapy.Spider):
         valid_code = list()
         skipped_count = 0
         for snippet in code_snippets:
-            if ast_parser.is_valid_code(snippet) and ast_parser.amount_of_nodes(snippet) > 1:
+            if is_valid_code(snippet) and amount_of_nodes(snippet) > 1:
                 valid_code.append(snippet)
             else:
                 skipped_count += 1

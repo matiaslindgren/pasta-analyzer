@@ -4,22 +4,6 @@ from whoosh.analysis import Tokenizer
 from whoosh.analysis.acore import Token
 
 
-def is_valid_code(code):
-    if not isinstance(code, str):
-        return False
-    try:
-        ast.parse(code)
-    except SyntaxError:
-        return False
-    return True
-
-
-def amount_of_nodes(code):
-    if not is_valid_code(code):
-        return 0
-    return len(list(ast.walk(ast.parse(code))))
-
-
 def preorder(node, depth=0):
     yield node, depth
     for child in ast.iter_child_nodes(node):
