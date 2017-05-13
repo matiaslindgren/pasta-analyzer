@@ -3,8 +3,8 @@ Scrapy spiders for crawling the Python docs.
 """
 import scrapy
 import re
-import ast
 import urllib
+import ast_parser
 
 
 class PATTERN:
@@ -105,10 +105,9 @@ class LibrarySpider(scrapy.Spider):
         valid_code = list()
         skipped_count = 0
         for snippet in code_snippets:
-            try:
-                ast.parse(snippet)
+            if ast_parser.is_valid_code(snippet) and ast_parser.amount_of_nodes(snippet) > 1:
                 valid_code.append(snippet)
-            except SyntaxError:
+            else:
                 skipped_count += 1
         if skipped_count > 0:
             self.logger.debug("Found {} snippets with invalid Python syntax and they were skipped".format(skipped_count))
@@ -160,12 +159,14 @@ class TutorialSpider(scrapy.Spider):
         snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
         code_snippets = map(parse_highlighted_code, snippet_selector)
         valid_code = list()
+        skipped_count = 0
         for snippet in code_snippets:
-            try:
-                ast.parse(snippet)
+            if ast_parser.is_valid_code(snippet) and ast_parser.amount_of_nodes(snippet) > 1:
                 valid_code.append(snippet)
-            except SyntaxError:
-                pass
+            else:
+                skipped_count += 1
+        if skipped_count > 0:
+            self.logger.debug("Found {} snippets with invalid Python syntax and they were skipped".format(skipped_count))
         yield {
             "title": get_section_title(section),
             "url": page.urljoin(section_url),
