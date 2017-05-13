@@ -34,17 +34,33 @@ def name_dump(root):
     return ' '.join(node.__class__.__name__ for node, _ in preorder(root))
 
 
-class ASTTokenizer:
+class ASTTokenizer(Tokenizer):
     def __init__(self, **dump_options):
         self.dump_options = dump_options
 
-    def __call__(self, source_string):
-        yield from dump(ast.parse(source_string), **self.dump_options)
+    def __call__(self, source_string, positions=False, chars=False,
+                 keeporiginal=False, start_pos=0, removestops=False,
+                 start_char=0, tokenize=True, mode='', **kwargs):
+        t = Token(positions, chars, removestops=removestops, mode=mode)
+        all_subtrees = dump(ast.parse(source_string), **self.dump_options)
+        full_tree = next(all_subtrees)
+        for pos, subtree in enumerate(itertools.chain((full_tree, ), all_subtrees)):
+            t.text = subtree
+            t.boost = 1.0
+            if keeporiginal:
+                t.original = t.text
+            t.stopped = False
+            if positions:
+                t.pos = start_pos + pos
+            if chars:
+                t.startchar = start_char + full_tree.index(subtree)
+                t.endchar = start_char + t.startchar + len(subtree)
+            yield t
 
 
 def dump(node, annotate_fields=True, include_attributes=False,
          drop_field_names=None, drop_field_values=None, max_depth=None,
-         tokenize_leaves=True):
+         tokenize_leaves=False):
     """
     Adapted from ast.dump, original: https://github.com/python/cpython/blob/master/Lib/ast.py#L88
     """
