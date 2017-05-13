@@ -75,6 +75,9 @@ def get_definition_url(dl):
     return dl.xpath(PATTERN.DEFINITION_LINKS).extract_first()
 
 
+# TODO we must go deeper, currently indexing only top level
+# http://localhost:8000/library/stdtypes.html#memoryview
+# http://localhost:8000/library/stdtypes.html#memoryview.__eq__
 class LibrarySpider(scrapy.Spider):
     name = "library"
     start_urls = (
