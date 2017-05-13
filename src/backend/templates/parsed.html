@@ -19,8 +19,7 @@
   {% for match in similar %}
   <li>
     <div class="result">
-      <a href="{{ match.url }}">{{ match.section_title }}</a>
-      {{ match.source|safe }}
+      <a href="{{ match.url }}">{{ match.title }}</a>
     </div>
   </li>
   {% endfor %}

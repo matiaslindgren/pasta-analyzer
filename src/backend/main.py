@@ -1,15 +1,16 @@
 import flask
 import json
 import pygments
+import indexer
+import ast_parser
 from pygments.lexers import Python3Lexer
 from pygments.formatters import HtmlFormatter
-from ..parsers import ast_parser
 
 flask_app = flask.Flask(__name__)
-index = indexing.Index("index", __name__)
+index = indexer.Index("index", __name__)
 
 @flask_app.route("/")
-def index():
+def root():
     return flask.render_template('index.html')
 
 @flask_app.route("/parse", methods=("POST", ))
@@ -18,14 +19,16 @@ def parse():
     try:
         # Parse spaghetti
         raw_text = flask.request.form['spaghetti']
-        # TODO: paging
         similar_snippets = get_similar_snippets(raw_text)
+        print("{} similar snippets".format(len(similar_snippets)))
         render_context["similar"] = similar_snippets
     except SyntaxError as syntax_error:
         render_context["errors"] = str(syntax_error)
     return flask.render_template('parsed.html', **render_context)
 
-def get_similar_snippets(string):
+
+def get_similar_snippets(code):
+    return [{'url': data['url'], 'title': data['title']} for data in index.get_documents(code)]
 
 
 # TEMP, should be from DB
@@ -51,26 +54,16 @@ def html_highlight(code, line_numbers):
     )
 
 
-def get_similar_snippets(code):
-    similar = list()
-    total_snippets_count = 0
-    for result in all_snippets(): # snippet is actually iterable of snippets
-        for snippet in result["code_snippets"]:
-            total_snippets_count += 1
-            _, snippet_linenos_similar = ast_parser.get_similar_lines(code, snippet, 1)
-            if not snippet_linenos_similar:
-                continue
-            similar.append({
-                "section_title": result["title"],
-                "url": result["url"],
-                "source": html_highlight(snippet, list(snippet_linenos_similar)),
-                "similar_lines": len(snippet_linenos_similar)
-            })
-    similar.sort(key=lambda d: d["similar_lines"], reverse=True)
-    print("compared {} snippets".format(total_snippets_count))
-    print("returning {} similar similar_snippets".format(len(similar)))
-    return similar
 
 if __name__ == "__main__":
+
+    # print("Indexing")
+    # import json
+    # with open("data.json") as f:
+    #     for d in json.load(f):
+    #         index.add_document(d)
+    # print("Indexing finished")
+
     flask_app.run()
+
 
