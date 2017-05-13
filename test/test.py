@@ -2,10 +2,10 @@ import ast
 import os.path
 import unittest
 import tempfile
-import indexing.indexer as indexer
+import indexer
 import json
 import random
-import parsers.ast_parser as ast_parser
+import ast_parser
 
 def code_to_index_string(code):
     return ast_parser.dump(ast.parse(code), drop_field_values={"None", "[]"})
