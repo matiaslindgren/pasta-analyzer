@@ -6,6 +6,7 @@ from pygments.formatters import HtmlFormatter
 from ..parsers import ast_parser
 
 flask_app = flask.Flask(__name__)
+index = indexing.Index("index", __name__)
 
 @flask_app.route("/")
 def index():
@@ -23,6 +24,9 @@ def parse():
     except SyntaxError as syntax_error:
         render_context["errors"] = str(syntax_error)
     return flask.render_template('parsed.html', **render_context)
+
+def get_similar_snippets(string):
+
 
 # TEMP, should be from DB
 def all_snippets():
@@ -53,7 +57,7 @@ def get_similar_snippets(code):
     for result in all_snippets(): # snippet is actually iterable of snippets
         for snippet in result["code_snippets"]:
             total_snippets_count += 1
-            _, snippet_linenos_similar = ast_parser.get_similar_lines(code, snippet, 2)
+            _, snippet_linenos_similar = ast_parser.get_similar_lines(code, snippet, 1)
             if not snippet_linenos_similar:
                 continue
             similar.append({
