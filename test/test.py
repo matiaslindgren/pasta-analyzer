@@ -21,6 +21,8 @@ class TestSpiders(unittest.TestCase):
 class TestIndexWriteAndQuery(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        print("Testing document index", file=sys.stderr)
+        print("Load data and build temporary index", file=sys.stderr)
         with open("test/data.json") as f:
             cls.test_data = json.load(f)
         cls.index_dir = tempfile.TemporaryDirectory()
@@ -28,9 +30,10 @@ class TestIndexWriteAndQuery(unittest.TestCase):
         cls.index = indexer.Index(index_path, "TEMP_TEST_INDEX")
         for d in cls.test_data:
             cls.index.add_document(d)
+        print("Index ready", file=sys.stderr)
 
     def test_query_with_a_document_from_the_index(self):
-        for i in range(10**4):
+        for i in range(100):
             data = random.choice(self.test_data)
             for code in data['code_snippets']:
                 found = False
@@ -43,6 +46,7 @@ class TestIndexWriteAndQuery(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.index_dir.cleanup()
+        print("Temporary index deleted", file=sys.stderr)
 
 
 if __name__ == "__main__":
