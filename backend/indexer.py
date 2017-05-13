@@ -1,41 +1,45 @@
 import os.path
-import shutil
+import ast
+import ast_parser
 from whoosh.index import create_in
 from whoosh.fields import Schema, TEXT, ID
-from whoosh.qparser import QueryParser
-from ast_parser import ASTTokenizer
+from whoosh.query import Term
 
 
-def create_new_index(path, force=False):
+def create_new_index(path, **tokenizer_options):
     schema = Schema(
         title=TEXT(stored=True),
         url=ID(stored=True),
-        content=TEXT(analyzer=ASTTokenizer(tokenize_leaves=False))
+        content=TEXT(analyzer=ast_parser.ASTTokenizer(**tokenizer_options))
     )
     if os.path.exists(path):
-        if force:
-            shutil.rmtree(path)
-        else:
-            raise RuntimeError("Index at {} already exists, not removing without force flag set to True.".format(path))
+        raise RuntimeError("Index at {} already exists.".format(path))
     os.mkdir(path)
     return create_in(path, schema)
 
 
 class Index:
-    def __init__(self, index_path, name):
-        self.index = create_new_index(index_path)
+    def __init__(self, index_path, name, **tokenizer_options):
+        self.index = create_new_index(index_path, **tokenizer_options)
         self.name = name
+        self.tokenizer_options = tokenizer_options
 
-    def add_documents(self, docs):
+    def add_document(self, data):
         writer = self.index.writer()
-        for doc in docs:
-            writer.add_document(**doc)
+        for code in data['code_snippets']:
+            writer.add_document(title=data['title'], url=data['url'], content=code)
         writer.commit()
 
-    def get_documents(self, query_string):
-        query_parser = QueryParser("content", self.index.schema)
-        query = query_parser.parse(query_string)
+    def parse_query(self, code_query):
+        subtrees = ast_parser.dump(ast.parse(code_query), **self.tokenizer_options)
+        full_tree = next(subtrees)
+        query = Term(u"content", full_tree)
+        for subtree in subtrees:
+            query |= Term(u"content", subtree)
+        return query
+
+    def get_documents(self, code_query):
         with self.index.searcher() as searcher:
-            for result in searcher.search(query):
+            for result in searcher.search(self.parse_query(code_query)):
                 yield result
 
