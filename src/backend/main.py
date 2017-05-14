@@ -25,18 +25,6 @@ def parse():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--build_index")
-    args = parser.parse_args()
-
-    if args.build_index:
-        print("Indexing")
-        import json
-        with open("data.json") as f:
-            for d in json.load(f):
-                index.add_document(d)
-        print("Indexing finished")
-
     flask_app.run()
 
 
