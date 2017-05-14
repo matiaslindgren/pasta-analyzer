@@ -5,10 +5,10 @@ import indexer
 def make_flask(name):
     return flask.Flask(name)
 
-def make_index(name):
+def load_index():
     return indexer.Index(
         settings.INDEX_DIRNAME,
-        name,
+        settings.INDEX_NAME,
         settings.TOKENIZER_OPTIONS
     )
 

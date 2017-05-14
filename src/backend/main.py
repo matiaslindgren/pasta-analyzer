@@ -4,7 +4,7 @@ import argparse
 
 
 flask_app = init_apps.make_flask(__name__)
-index = init_apps.make_index(__name__)
+index = init_apps.load_index()
 
 
 @flask_app.route("/")

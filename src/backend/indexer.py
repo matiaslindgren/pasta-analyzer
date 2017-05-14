@@ -10,13 +10,13 @@ from whoosh.query import Term
 
 
 def create_new_index(path, name, tokenizer_options):
+    if exists_in(path, name):
+        raise RuntimeError("Index already exists at {}".format(path))
     schema = Schema(
         title=TEXT(stored=True),
         url=ID(stored=True, unique=True),
         content=TEXT(stored=True, analyzer=ast_parser.ASTTokenizer(**tokenizer_options))
     )
-    if os.path.exists(path):
-        raise RuntimeError("Index at {} already exists.".format(path))
     os.mkdir(path)
     return create_in(path, schema, indexname=name)
 
@@ -29,10 +29,9 @@ def all_linenumbers(root):
 #TODO incremental indexing and housekeeping
 class Index:
     def __init__(self, index_path, name, tokenizer_options):
-        if exists_in(index_path, name):
-            self.index = open_dir(index_path, name)
-        else:
-            self.index = create_new_index(index_path, name, tokenizer_options)
+        if not exists_in(index_path, name):
+            raise RuntimeError("There is no index at {}".format(index_path))
+        self.index = open_dir(index_path, name)
         self.name = name
         self.tokenizer_options = tokenizer_options
 
