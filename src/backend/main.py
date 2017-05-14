@@ -17,7 +17,7 @@ def parse():
     render_context = dict()
     try:
         raw_text = flask.request.form['spaghetti']
-        similar_snippets = index.get_similar_snippets(raw_text)
+        similar_snippets = list(index.get_similar_snippets(raw_text))
         render_context["similar"] = similar_snippets
     except SyntaxError as syntax_error:
         render_context["errors"] = str(syntax_error)

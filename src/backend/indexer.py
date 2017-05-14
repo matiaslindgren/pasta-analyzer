@@ -62,14 +62,12 @@ class Index:
                 yield result
 
     def get_similar_snippets(self, code):
-        similar = []
         for hit in self.get_documents(code):
             data = {'title': hit['title'], 'url': hit['url']}
             matched_tokens = set(pair[1] for pair in hit.matched_terms() if pair[0] == 'content')
             data['matched_tokens_count'] = len(matched_tokens)
             data['source_html_highlighted'] = self.highlight_matches(hit['content'], matched_tokens)
-            similar.append(data)
-        return similar
+            yield data
 
 
     # TODO: implement a custom lexer to highlight matching tokens instead of the whole line containing a matching token
