@@ -76,9 +76,6 @@ def get_definition_url(dl):
     return dl.xpath(PATTERN.DEFINITION_LINKS).extract_first()
 
 
-# TODO we must go deeper, currently indexing only top level
-# http://localhost:8000/library/stdtypes.html#memoryview
-# http://localhost:8000/library/stdtypes.html#memoryview.__eq__
 class LibrarySpider(scrapy.Spider):
     name = "library"
     start_urls = (
@@ -112,12 +109,13 @@ class LibrarySpider(scrapy.Spider):
         Recursively yield dicts of url string and code snippets list within 'section' and all its nested sections.
         The data within a nested section is not included into the data of its parent, unless it is explicitly duplicate in the html.
         """
+        section_title = get_section_title(section)
         section_url = page.urljoin(get_section_url(section))
         self.logger.debug("Parsing section {}".format(section_url))
         for subsection in section.xpath(PATTERN.CHILD_PAGE_SECTIONS):
             yield from self.parse_section(subsection, page)
         for dl in section.xpath(PATTERN.DEFINITIONS):
-            yield from self.parse_definition_description(dl, section, section_url)
+            yield from self.parse_definition_description(dl, section_url, section_title)
         snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
         if not snippet_selector:
             return
@@ -132,14 +130,15 @@ class LibrarySpider(scrapy.Spider):
         if skipped_count > 0:
             self.logger.debug("Found {} snippets with invalid Python syntax and they were skipped".format(skipped_count))
         yield {
-            "title": get_section_title(section),
+            "title": section_title,
             "url": page.urljoin(section_url),
             "code_snippets": valid_code
         }
 
-    def parse_definition_description(self, definition, parent, parent_url):
+    def parse_definition_description(self, definition, parent_url, parent_title):
+        definition_title = get_definition_title(definition)
         for child_definition in definition.xpath(PATTERN.CHILD_DEFINITIONS):
-            yield from self.parse_definition_description(child_definition, definition, parent_url)
+            yield from self.parse_definition_description(child_definition, parent_url, definition_title or parent_title)
         snippet_selector = definition.xpath(PATTERN.DEFINITION_CODE_SNIPPETS)
         if not snippet_selector:
             return
@@ -154,9 +153,7 @@ class LibrarySpider(scrapy.Spider):
         if skipped_count > 0:
             self.logger.debug("Found {} snippets with invalid Python syntax and they were skipped".format(skipped_count))
         yield {
-            "title": "{}: {}".format(
-                get_section_title(parent),
-                get_definition_title(definition)),
+            "title": "{}: {}".format(parent_title, definition_title),
             "url": urllib.parse.urljoin(parent_url, get_definition_url(definition)),
             "code_snippets": valid_code
         }
