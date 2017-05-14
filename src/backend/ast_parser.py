@@ -43,11 +43,13 @@ class ASTTokenizer(Tokenizer):
 
 
 def dump(node, annotate_fields=True, include_attributes=False,
-         drop_field_names=None, drop_field_values=None, max_depth=None,
-         tokenize_leaves=False):
+         drop_field_names=None, drop_field_values=None, min_depth=None,
+         max_depth=None):
     """
     Adapted from ast.dump, original: https://github.com/python/cpython/blob/master/Lib/ast.py#L88
     """
+    if min_depth and max_depth:
+        assert min_depth < max_depth
     if drop_field_names is None:
         drop_field_names = set()
     if drop_field_values is None:
@@ -81,7 +83,7 @@ def dump(node, annotate_fields=True, include_attributes=False,
     if not isinstance(node, ast.AST):
         raise TypeError('expected AST, got %r' % name(node))
     for subtree, _ in preorder(node):
-        if not tokenize_leaves and not has_depth_at_least(subtree, 1):
+        if min_depth is not None and not has_depth_at_least(subtree, min_depth):
             continue
         yield _format(subtree, 0)
 
