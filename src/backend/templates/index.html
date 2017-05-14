@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
 
 {% block head_script_includes %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
 {% endblock %}
 
 {% block body_content %}
-<h2>paste your rubbish:</h2>
+<h2>Paste some Python:</h2>
 <form action="{{ url_for('parse') }}" method="POST">
-    <textarea rows="12" cols="64" name="spaghetti">list(range(10))</textarea>
-    <input type="submit" name="submit" value="Make sense out of it">
+    <textarea rows="12" cols="64" name="spaghetti"></textarea>
+    <input type="submit" name="submit" value="Search">
 </form>
 {% endblock %}
