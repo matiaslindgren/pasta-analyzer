@@ -57,10 +57,19 @@ textarea {
    ========================================================================== */
 
 ul li div.result {
-  margin: 15px;
-  margin-bottom: 25px;
+  margin-top: 35px;
+  margin-bottom: 45px;
 }
-
+ul li div.result p {
+  margin-bottom: 0;
+}
+ul li div.result p.result-info {
+  margin-top: 0;
+}
+div.result div.highlight pre {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
 
 
 

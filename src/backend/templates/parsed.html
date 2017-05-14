@@ -19,11 +19,10 @@
   {% for match in similar %}
   <li>
     <div class="result">
-      <a href="{{ match.url }}">{{ match.title }}</a>
-      <pre>{{ match.content|safe }}</pre>
-      {% for term in match.matched %}
-      <b>{{ term }}</b><br>
-  {% endfor %}
+      <p><a href="{{ match.url }}">{{ match.title }}</a></p>
+      <small>{{ match.url }}</small>
+      <p class="result-info">{{ match.matched_tokens_count }} matching subtrees in the syntax tree:</p>
+      {{ match.source_html_highlighted|safe }}
     </div>
   </li>
   {% endfor %}

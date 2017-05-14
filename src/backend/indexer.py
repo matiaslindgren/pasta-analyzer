@@ -64,9 +64,10 @@ class Index:
     def get_similar_snippets(self, code):
         similar = []
         for hit in self.get_documents(code):
-            data = {'title': hit['title'], 'url': hit['url'], 'matched': hit.matched_terms()}
+            data = {'title': hit['title'], 'url': hit['url']}
             matched_tokens = set(pair[1] for pair in hit.matched_terms() if pair[0] == 'content')
-            data['content'] = self.highlight_matches(hit['content'], matched_tokens)
+            data['matched_tokens_count'] = len(matched_tokens)
+            data['source_html_highlighted'] = self.highlight_matches(hit['content'], matched_tokens)
             similar.append(data)
         return similar
 
