@@ -16,8 +16,9 @@ class PATTERN:
     CHILD_PAGE_SECTIONS  = "./" + _SECTION_DIV
     LIST_PAGE_SECTIONS   = "./{}/dl".format(_SECTION_DIV)
     TOCTREE_TOP_LINKS    = "//ul/li[contains(@class, 'toctree-l1')]/a"
-    SECTION_HEADER_TEXT  = "|".join("(./h{}/text())".format(i) for i in range(1, 4))
+    SECTION_HEADER_TEXT  = "|".join("((./h{0}/text())|(./h{0}//code//text()))".format(i) for i in range(1, 4))
     DEFINITIONS          = "./dl"
+    CHILD_DEFINITIONS    = "./dd/dl"
     DEFINITION_NAME      = "./dt/@id"
     DEFINITION_LINKS     = "./dt/a[contains(@class, 'headerlink')]/@href"
     HEADER_SECTION_LINKS = "|".join("(.//h{}/a[contains(@class, 'headerlink')]/@href)".format(i) for i in range(1, 4))
@@ -64,7 +65,7 @@ def get_section_url(s):
 
 
 def get_section_title(s):
-    return s.xpath(PATTERN.SECTION_HEADER_TEXT).extract_first()
+    return ''.join(s.xpath(PATTERN.SECTION_HEADER_TEXT).extract())
 
 
 def get_definition_title(dl):
@@ -116,10 +117,32 @@ class LibrarySpider(scrapy.Spider):
         for subsection in section.xpath(PATTERN.CHILD_PAGE_SECTIONS):
             yield from self.parse_section(subsection, page)
         for dl in section.xpath(PATTERN.DEFINITIONS):
-            yield from self.parse_definition_description(section, section_url, dl)
+            yield from self.parse_definition_description(dl, section, section_url)
+        snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
+        if not snippet_selector:
+            return
+        code_snippets = map(parse_highlighted_code, snippet_selector)
+        valid_code = list()
+        skipped_count = 0
+        for snippet in code_snippets:
+            if is_valid_code(snippet) and amount_of_nodes(snippet) > 1:
+                valid_code.append(snippet)
+            else:
+                skipped_count += 1
+        if skipped_count > 0:
+            self.logger.debug("Found {} snippets with invalid Python syntax and they were skipped".format(skipped_count))
+        yield {
+            "title": get_section_title(section),
+            "url": page.urljoin(section_url),
+            "code_snippets": valid_code
+        }
 
-    def parse_definition_description(self, parent, parent_url, definition):
+    def parse_definition_description(self, definition, parent, parent_url):
+        for child_definition in definition.xpath(PATTERN.CHILD_DEFINITIONS):
+            yield from self.parse_definition_description(child_definition, definition, parent_url)
         snippet_selector = definition.xpath(PATTERN.DEFINITION_CODE_SNIPPETS)
+        if not snippet_selector:
+            return
         code_snippets = map(parse_highlighted_code, snippet_selector)
         valid_code = list()
         skipped_count = 0
@@ -176,6 +199,8 @@ class TutorialSpider(scrapy.Spider):
         for subsection in section.xpath(PATTERN.CHILD_PAGE_SECTIONS):
             yield from self.parse_section(subsection, page)
         snippet_selector = section.xpath(PATTERN.CHILD_CODE_SNIPPETS)
+        if not snippet_selector:
+            return
         code_snippets = map(parse_highlighted_code, snippet_selector)
         valid_code = list()
         skipped_count = 0
