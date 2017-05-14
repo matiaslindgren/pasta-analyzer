@@ -20,6 +20,10 @@
   <li>
     <div class="result">
       <a href="{{ match.url }}">{{ match.title }}</a>
+      <pre>{{ match.content|safe }}</pre>
+      {% for term in match.matched %}
+      <b>{{ term }}</b><br>
+  {% endfor %}
     </div>
   </li>
   {% endfor %}

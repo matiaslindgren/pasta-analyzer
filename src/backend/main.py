@@ -1,10 +1,10 @@
 import flask
-import json
-import pygments
-import indexer
+import ast
 import ast_parser
+import pygments
 from pygments.lexers import Python3Lexer
 from pygments.formatters import HtmlFormatter
+import indexer
 
 flask_app = flask.Flask(__name__)
 index = indexer.Index("index", __name__)
@@ -28,20 +28,28 @@ def parse():
 
 
 def get_similar_snippets(code):
-    return [{'url': data['url'], 'title': data['title']} for data in index.get_documents(code)]
+    similar = []
+    for hit in index.get_documents(code):
+        data = {'title': hit['title'], 'url': hit['url'], 'matched': hit.matched_terms()}
+        matched_tokens = set(pair[1] for pair in hit.matched_terms() if pair[0] == 'content')
+        data['content'] = highlight_matches(hit['content'], matched_tokens)
+        similar.append(data)
+    return similar
 
 
-# TEMP, should be from DB
-def all_snippets():
-    snippets = list()
-    for i in range(1, 3):
-        with open("out{}.json".format(i)) as f:
-            snippets.extend(json.load(f))
-    for page in snippets:
-        if not page["code_snippets"]:
-            continue
-        yield page
+def all_linenumbers(root):
+    return [node.lineno for node in ast.walk(root) if hasattr(node, "lineno")]
 
+
+# TODO: implement a custom lexer to highlight matching tokens instead of the whole line containing a matching token
+def highlight_matches(code, matched_tokens):
+    line_numbers = list()
+    for node in ast.walk(ast.parse(code)):
+        dumps = ast_parser.dump(node, tokenize_leaves=False)
+        node_dump = next(dumps, '').encode()
+        if node_dump in matched_tokens:
+            line_numbers.extend(all_linenumbers(node))
+    return html_highlight(code, line_numbers)
 
 def html_highlight(code, line_numbers):
     format_options = {

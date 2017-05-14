@@ -10,7 +10,7 @@ def create_new_index(path, name, **tokenizer_options):
     schema = Schema(
         title=TEXT(stored=True),
         url=ID(stored=True, unique=True),
-        content=TEXT(analyzer=ast_parser.ASTTokenizer(**tokenizer_options))
+        content=TEXT(stored=True, analyzer=ast_parser.ASTTokenizer(**tokenizer_options))
     )
     if os.path.exists(path):
         raise RuntimeError("Index at {} already exists.".format(path))
@@ -50,6 +50,6 @@ class Index:
 
     def get_documents(self, code_query):
         with self.index.searcher() as searcher:
-            for result in searcher.search(self.parse_query(code_query)):
+            for result in searcher.search(self.parse_query(code_query), terms=True):
                 yield result
 
