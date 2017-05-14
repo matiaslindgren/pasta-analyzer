@@ -1,23 +1,20 @@
 import flask
-import ast
-import ast_parser
-import pygments
-from pygments.lexers import Python3Lexer
-from pygments.formatters import HtmlFormatter
-import indexer
+import init_apps
 
-flask_app = flask.Flask(__name__)
-index = indexer.Index("index", __name__)
+
+flask_app = init_apps.make_flask(__name__)
+index = init_apps.make_index(__name__)
+
 
 @flask_app.route("/")
 def root():
     return flask.render_template('index.html')
 
+
 @flask_app.route("/parse", methods=("POST", ))
 def parse():
     render_context = dict()
     try:
-        # Parse spaghetti
         raw_text = flask.request.form['spaghetti']
         similar_snippets = index.get_similar_snippets(raw_text)
         render_context["similar"] = similar_snippets
