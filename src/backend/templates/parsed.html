@@ -15,14 +15,14 @@
 {% else %}
   <ul style="list-style-type:none">
   {% for match in similar %}
-  <li>
-    <div class="result">
-      <p><a href="{{ match.url }}">{{ match.title }}</a></p>
-      <small>{{ match.url }}</small>
-      <p class="result-info">{{ match.matched_tokens_count }} matching subtrees in the syntax tree:</p>
-      {{ match.source_html_highlighted|safe }}
-    </div>
-  </li>
+    <li>
+      <div class="result">
+        <p><a href="{{ match.url }}">{{ match.title }}</a></p>
+        <small>{{ match.url }}</small>
+        {{ match.source_html_highlighted|safe }}
+      </div>
+    </li>
   {% endfor %}
+  </ul>
 {% endif %}
 {% endblock %}
