@@ -84,7 +84,8 @@ class Index:
 
     def get_similar_snippets(self, code):
         for hit in self.get_documents(code):
-            data = {'title': hit['title'], 'url': hit['url']}
+            repo, filename = tuple(hit['title'].split(" "))
+            data = {'title': {'repo': repo, 'filename': filename}, 'url': hit['url']}
             matched_tokens = set(pair[1] for pair in hit.matched_terms() if pair[0] == 'content')
             data['matched_tokens_count'] = len(matched_tokens)
             data['source_html_highlighted'], highlighted_lines = self.highlight_matches(hit['content'], matched_tokens)

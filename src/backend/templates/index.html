@@ -27,7 +27,7 @@
       <li>
         <div class="result">
           <div class="result-metadata">
-            <p><a href="{{ match.url }}">{{ match.title }}</a></p>
+            <p><a href="{{ match.url }}"><b>{{ match.title.repo }}</b> {{ match.title.filename }}</a></p>
             <small>{{ match.url }}</small>
           </div>
           {{ match.source_html_highlighted|safe }}
