@@ -56,22 +56,68 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
+div.content {
+  text-align: center;
+}
+
+p,
+small,
+.form-control,
+div.content form input {
+  font-family: monospace;
+}
+
+div.content form {
+  padding-top: 30px;
+  padding-left: 10%;
+  padding-right: 10%;
+  margin-bottom: 15px;
+}
+div.content div.validation-feedback {
+  padding-left: 10%;
+  padding-right: 10%;
+  margin-bottom: 15px;
+}
+
+ul {
+  padding: 0;
+}
 ul li div.result {
-  margin-top: 35px;
-  margin-bottom: 45px;
+  margin-bottom: 25px;
 }
-ul li div.result p {
-  margin-bottom: 0;
-}
-ul li div.result p.result-info {
-  margin-top: 0;
-}
-div.result div.highlight pre {
-  margin-top: 5px;
+
+div.result div.result-metadata {
+  text-align: left;
+  text-overflow: ellipsis;
+  overflow: hidden;
   margin-bottom: 5px;
 }
-body div.content {
-  margin: 10px;
+div.result-metadata p {
+  font-size: 120%;
+  margin-bottom: 0;
+}
+div.result-metadata small {
+  font-size: 80%;
+}
+
+div.content div.search-results {
+  padding-left: 10%;
+  padding-right: 10%;
+  margin-bottom: 15px;
+}
+div.content div.search-results {
+  margin-top: 35px;
+}
+
+div.content table.highlighttable {
+  text-align: left;
+}
+table.highlighttable tbody tr td.code {
+  max-width: 0;
+  width: 100%;
+}
+td.code div.highlight pre {
+  overflow-x: hidden;
 }
 table.highlighttable tbody tr td.linenos {
   padding-right: 5px;
