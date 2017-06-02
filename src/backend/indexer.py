@@ -1,10 +1,8 @@
 import os.path
 import ast
 import ast_parser
+import result_formatter
 import itertools
-import pygments
-from pygments.lexers import Python3Lexer
-from pygments.formatters import HtmlFormatter
 from whoosh.index import exists_in, create_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.query import Term
@@ -114,46 +112,6 @@ class Index:
         # print("code")
         # print("\n".join("{} {}".format(n, line) for n, line in enumerate(code.splitlines(), start=1)))
         # print()
-        return self.html_highlight(code, line_numbers), sorted(line_numbers)
+        return result_formatter.html_highlight(code, line_numbers), sorted(line_numbers)
 
-
-    def html_highlight(self, code, line_numbers):
-        format_options = {
-            "hl_lines": sorted(line_numbers),
-            "linenos": "table"
-        }
-        lexer = Python3Lexer()
-        format_options["hl_lines"] = [n - min(line_numbers) + 2  for n in line_numbers]
-        lexer.add_filter(LineFilter(line_numbers))
-        # print("highlighting {}".format(" ".join(map(str, format_options["hl_lines"]))))
-        format_options["linenostart"] = max(1, min(line_numbers)-1)
-        return pygments.highlight(
-            code,
-            lexer,
-            HtmlFormatter(**format_options))
-
-class LineFilter(pygments.filter.Filter):
-    def __init__(self, line_numbers, **options):
-        super().__init__(**options)
-        smallest = min(line_numbers)
-        self.include_lines = line_numbers | set(i for i in range(smallest, max(1, smallest-3), -1))
-        # print("include lines {}".format(" ".join(map(str, self.include_lines))))
-
-    def filter(self, lexer, stream):
-        current_lineno = 1
-        yielding = False
-        yielded = 0
-        for token, value in stream:
-            # print((token, value, current_lineno, yielded, yielding))
-            if yielded > 20:
-                return
-            newline_count = value.count("\n")
-            if yielding:
-                yield token, value
-                yielded += newline_count
-            elif any(lineno in self.include_lines
-                     for lineno in
-                     range(current_lineno, current_lineno+newline_count)):
-                yielding = True
-            current_lineno += newline_count
 
