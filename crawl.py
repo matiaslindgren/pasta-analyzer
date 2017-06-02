@@ -55,9 +55,13 @@ indexer.create_new_index(
 )
 
 print("Add crawled output to index")
-index = indexer.Index(index_path, settings.INDEX_NAME, settings.TOKENIZER_OPTIONS)
+index = indexer.Index(
+    index_path,
+    settings.INDEX_NAME,
+    settings.TOKENIZER_OPTIONS
+)
 for data in scraped_data:
-    index.add_document(data)
+    index.add_documents(data)
 
 print("All done")
 
