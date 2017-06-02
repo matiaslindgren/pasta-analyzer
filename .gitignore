@@ -6,6 +6,7 @@ index
 out
 *.zip
 
-cloned
 literature
 
+cloned
+repo_data.json
