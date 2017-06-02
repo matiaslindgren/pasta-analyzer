@@ -115,7 +115,31 @@ class Index:
         }
         return pygments.highlight(
             code,
-            Python3Lexer(),
-            HtmlFormatter(**format_options)
-        )
+            lexer,
+            HtmlFormatter(**format_options))
+
+class LineFilter(pygments.filter.Filter):
+    def __init__(self, line_numbers, **options):
+        super().__init__(**options)
+        smallest = min(line_numbers)
+        self.include_lines = line_numbers | set(i for i in range(smallest, max(1, smallest-3), -1))
+        # print("include lines {}".format(" ".join(map(str, self.include_lines))))
+
+    def filter(self, lexer, stream):
+        current_lineno = 1
+        yielding = False
+        yielded = 0
+        for token, value in stream:
+            # print((token, value, current_lineno, yielded, yielding))
+            if yielded > 20:
+                return
+            newline_count = value.count("\n")
+            if yielding:
+                yield token, value
+                yielded += newline_count
+            elif any(lineno in self.include_lines
+                     for lineno in
+                     range(current_lineno, current_lineno+newline_count)):
+                yielding = True
+            current_lineno += newline_count
 
