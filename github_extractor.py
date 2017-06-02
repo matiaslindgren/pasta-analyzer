@@ -4,7 +4,7 @@ import github3
 import json
 
 SEARCH_QUERY = "language:python stars:>1 size:>10000"
-SEARCH_PARAMETERS = { "sort": "stars", "number": 10 }
+SEARCH_PARAMETERS = { "sort": "stars", "number": 100 }
 
 def hard_prune_repo(repo_path):
     """Delete everything, except for *.py files and git metadata and finally remove empty folders."""
