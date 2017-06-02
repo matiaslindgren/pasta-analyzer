@@ -73,7 +73,9 @@ div.result div.highlight pre {
 body div.content {
   margin: 10px;
 }
-
+table.highlighttable tbody tr td.linenos {
+  padding-right: 5px;
+}
 
 
 
