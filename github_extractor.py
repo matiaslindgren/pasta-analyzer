@@ -6,12 +6,20 @@ import json
 SEARCH_QUERY = "language:python stars:>1 size:>10000"
 SEARCH_PARAMETERS = { "sort": "stars", "number": 100 }
 
+
 def hard_prune_repo(repo_path):
-    """Delete everything, except for *.py files and git metadata and finally remove empty folders."""
+    """
+    1. Delete all files, except git metadata and files with names that match *.py.
+    2. Delete all empty folders.
+    3. Delete all symbolic links.
+    4. Set permission for all files to 440.
+    """
     assert os.path.exists(repo_path)
     prune_commands = (
         "find {} -type f ! -name '*.py' -not -iwholename '*.git*' -delete",
-        "find {} -type d -empty -delete")
+        "find {} -type d -empty -delete",
+        "find {} -type l -delete",
+        "find {} -type f -exec chmod 440 {{}} \;")
     for command in prune_commands:
         command = command.format(repo_path)
         print(command)
