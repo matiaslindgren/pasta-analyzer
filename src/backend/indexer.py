@@ -23,12 +23,20 @@ def create_new_index(path, name, tokenizer_options):
 def all_linenumbers(root):
     return [node.lineno for node in ast.walk(root) if hasattr(node, "lineno")]
 
+
 def subsequence_increasing_by_one(seq):
     return ([seq[0]] +
             [x for _, x in
              itertools.takewhile(
                  lambda t: abs(t[0] - t[1]) == 1,
                  zip(seq, seq[1:]))])
+
+def content_is_valid_code(content):
+    try:
+        ast.parse(content)
+    except SyntaxError:
+        return False
+    return True
 
 
 #TODO incremental indexing and housekeeping
@@ -40,15 +48,8 @@ class Index:
         self.name = name
         self.tokenizer_options = tokenizer_options
 
-    def valid_content(self, content):
-        try:
-            ast.parse(content)
-        except SyntaxError:
-            return False
-        return True
-
     def add_document(self, data):
-        if not self.valid_content(data['content']):
+        if not content_is_valid_code(data['content']):
             return False
         writer = self.index.writer()
         writer.add_document(title=data['title'], url=data['url'], content=data['content'])
@@ -58,7 +59,7 @@ class Index:
     def add_documents(self, data):
         writer = self.index.writer()
         for code in data['code_snippets']:
-            if not self.valid_content(code):
+            if not content_is_valid_code(code):
                 continue
             writer.add_document(title=data['title'], url=data['url'], content=code)
         writer.commit()
