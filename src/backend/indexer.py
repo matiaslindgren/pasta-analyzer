@@ -101,18 +101,12 @@ class Index:
     # TODO: make the use the line_numbers more consistent
     def highlight_matches(self, code, matched_tokens):
         line_numbers = set()
-        # print("highlighting {} matched tokens".format(len(matched_tokens)))
         # TODO: when found a matching subtree, don't traverse its children
         for node in ast.walk(ast.parse(code)):
             dumps = ast_parser.dump(node, **self.tokenizer_options)
             node_dump = next(dumps, '').encode()
             if node_dump in matched_tokens:
                 line_numbers |= set(all_linenumbers(node))
-        # line_numbers = sorted(line_numbers)
-        # print("highlighting lines {}".format(", ".join(map(str, line_numbers))))
-        # print("code")
-        # print("\n".join("{} {}".format(n, line) for n, line in enumerate(code.splitlines(), start=1)))
-        # print()
         return result_formatter.html_highlight(code, line_numbers), sorted(line_numbers)
 
 
