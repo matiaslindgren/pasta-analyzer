@@ -16,7 +16,7 @@ def create_new_index(path, name, tokenizer_options):
     schema = Schema(
         title=TEXT(stored=True),
         url=ID(stored=True, unique=True),
-        content=TEXT(stored=True, analyzer=ast_parser.ASTTokenizer(**tokenizer_options))
+        content=TEXT(stored=True, analyzer=ast_parser.ASTTokenizer(tokenizer_options))
     )
     os.mkdir(path)
     return create_in(path, schema, indexname=name)
