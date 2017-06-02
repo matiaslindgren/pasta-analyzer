@@ -10,8 +10,8 @@ def preorder(node, depth=0):
         yield from preorder(child, depth+1)
 
 
-def has_depth_at_least(root, max_depth):
-    return any(depth >= max_depth for _, depth in preorder(root))
+def has_depth_at_least(root, min_depth):
+    return any(depth >= min_depth for _, depth in preorder(root))
 
 
 def name_dump(root):
