@@ -1,6 +1,7 @@
 import os.path
 import ast
 import ast_parser
+import itertools
 import pygments
 from pygments.lexers import Python3Lexer
 from pygments.formatters import HtmlFormatter
@@ -24,6 +25,12 @@ def create_new_index(path, name, tokenizer_options):
 def all_linenumbers(root):
     return [node.lineno for node in ast.walk(root) if hasattr(node, "lineno")]
 
+def subsequence_increasing_by_one(seq):
+    return ([seq[0]] +
+            [x for _, x in
+             itertools.takewhile(
+                 lambda t: abs(t[0] - t[1]) == 1,
+                 zip(seq, seq[1:]))])
 
 
 #TODO incremental indexing and housekeeping
