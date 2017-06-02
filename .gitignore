@@ -1,7 +1,8 @@
 *.sw[op]
 __pycache__
 *.pyc
-
+index
+*.log
 out
 *.zip
 
