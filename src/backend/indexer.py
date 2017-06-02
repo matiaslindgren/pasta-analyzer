@@ -99,20 +99,34 @@ class Index:
 
 
     # TODO: implement a custom lexer to highlight matching tokens instead of the whole line containing a matching token
+    # TODO: make the use the line_numbers more consistent
     def highlight_matches(self, code, matched_tokens):
-        line_numbers = list()
+        line_numbers = set()
+        # print("highlighting {} matched tokens".format(len(matched_tokens)))
+        # TODO: when found a matching subtree, don't traverse its children
         for node in ast.walk(ast.parse(code)):
             dumps = ast_parser.dump(node, **self.tokenizer_options)
             node_dump = next(dumps, '').encode()
             if node_dump in matched_tokens:
-                line_numbers.extend(all_linenumbers(node))
-        return self.html_highlight(code, line_numbers)
+                line_numbers |= set(all_linenumbers(node))
+        # line_numbers = sorted(line_numbers)
+        # print("highlighting lines {}".format(", ".join(map(str, line_numbers))))
+        # print("code")
+        # print("\n".join("{} {}".format(n, line) for n, line in enumerate(code.splitlines(), start=1)))
+        # print()
+        return self.html_highlight(code, line_numbers), sorted(line_numbers)
 
 
     def html_highlight(self, code, line_numbers):
         format_options = {
-            "hl_lines": line_numbers,
+            "hl_lines": sorted(line_numbers),
+            "linenos": "table"
         }
+        lexer = Python3Lexer()
+        format_options["hl_lines"] = [n - min(line_numbers) + 2  for n in line_numbers]
+        lexer.add_filter(LineFilter(line_numbers))
+        # print("highlighting {}".format(" ".join(map(str, format_options["hl_lines"]))))
+        format_options["linenostart"] = max(1, min(line_numbers)-1)
         return pygments.highlight(
             code,
             lexer,
