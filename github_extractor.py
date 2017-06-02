@@ -26,6 +26,19 @@ def hard_prune_repo(repo_path):
         subprocess.run(command, shell=True, check=True)
 
 
+def count_all_python_lines(root):
+    """
+    Run CLOC at root and return the amount of lines of Python code in every file.
+    """
+    assert os.path.exists(root)
+    command = "cloc --quiet --csv {}".format(root).format(repo_path)
+    print(command)
+    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE)
+    stdout = str(result.stdout, "utf-8")
+    assert "Python" in stdout
+    return int(stdout.split("Python")[-1].splitlines()[0].split(",")[-1])
+
+
 if __name__ == "__main__":
     repo_data_file = os.path.join(".", "repo_data.json")
 
@@ -64,4 +77,12 @@ if __name__ == "__main__":
         else:
             print("not cloning into existing '{}'".format(repo_path))
 
+    print()
+    print("all repos cloned")
+    print("counting amount of Python lines in '{}'".format(cloned_destination))
+    python_line_count = count_all_python_lines(cloned_destination)
+    cloned_meta = os.path.join(cloned_destination, "meta.json")
+    print("{} lines of Python code, saving result to '{}'".format(python_line_count, cloned_meta))
+    with open("meta.json", "w") as f:
+        json.dump({"python_line_count": python_line_count}, f)
 
