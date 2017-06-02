@@ -47,6 +47,8 @@ class Index:
         self.index = open_dir(index_path, name)
         self.name = name
         self.tokenizer_options = tokenizer_options
+        self.query_options = tokenizer_options.copy()
+        self.query_options["min_depth"] = None
 
     def add_document(self, data):
         if not content_is_valid_code(data['content']):
@@ -71,7 +73,7 @@ class Index:
         writer.commit()
 
     def parse_query(self, code_query):
-        subtrees = ast_parser.dump(ast.parse(code_query), **self.tokenizer_options)
+        subtrees = ast_parser.dump(ast.parse(code_query), **self.query_options)
         full_tree = next(subtrees)
         query = Term(u"content", full_tree)
         for subtree in subtrees:

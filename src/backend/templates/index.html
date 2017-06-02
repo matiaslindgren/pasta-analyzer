@@ -16,10 +16,12 @@
     <p>The above code has at least one syntax error:</p>
     <pre>{{ errors }}</pre>
   </div>
+
   {% elif not similar %}
   <div class="validation-feedback">
     <p>No results found for the submitted code</p>
   </div>
+
   {% else %}
   <div class="search-results">
     <ul style="list-style-type:none">
@@ -37,6 +39,7 @@
     </ul>
   </div>
   {% endif %}
+
 {% endif %}
 
 {% endblock %}
