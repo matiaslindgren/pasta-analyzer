@@ -89,7 +89,12 @@ class Index:
             data = {'title': hit['title'], 'url': hit['url']}
             matched_tokens = set(pair[1] for pair in hit.matched_terms() if pair[0] == 'content')
             data['matched_tokens_count'] = len(matched_tokens)
-            data['source_html_highlighted'] = self.highlight_matches(hit['content'], matched_tokens)
+            data['source_html_highlighted'], highlighted_lines = self.highlight_matches(hit['content'], matched_tokens)
+            first_highlighted_range = subsequence_increasing_by_one(highlighted_lines)
+            if len(first_highlighted_range) == 1:
+                data['url'] += "#L{}".format(first_highlighted_range[0])
+            else:
+                data['url'] += "#L{}-L{}".format(first_highlighted_range[0], first_highlighted_range[-1])
             yield data
 
 
