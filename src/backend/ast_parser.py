@@ -18,15 +18,20 @@ def name_dump(root):
     return ' '.join(node.__class__.__name__ for node, _ in preorder(root))
 
 
+# TODO:
+# - which nodes can be seen as stopwords?
+# - create two indexes:
+#   1. with variable names and with stopwords, for matching scattered lines, shallow trees allowed
+#   2. without variable names and without stopwords, for matching larger constructs, tall trees only
 class ASTTokenizer(Tokenizer):
-    def __init__(self, **dump_options):
-        self.dump_options = dump_options
+    def __init__(self, string_dump_options):
+        self.string_dump_options = string_dump_options
 
     def __call__(self, source_string, positions=False, chars=False,
                  keeporiginal=False, start_pos=0, removestops=False,
                  start_char=0, tokenize=True, mode='', **kwargs):
         t = Token(positions, chars, removestops=removestops, mode=mode)
-        all_subtrees = dump(ast.parse(source_string), **self.dump_options)
+        all_subtrees = dump(ast.parse(source_string), **self.string_dump_options)
         full_tree = next(all_subtrees)
         for pos, subtree in enumerate(itertools.chain((full_tree, ), all_subtrees)):
             t.text = subtree
@@ -43,8 +48,8 @@ class ASTTokenizer(Tokenizer):
 
 
 def dump(node, annotate_fields=True, include_attributes=False,
-         drop_field_names=None, drop_field_values=None, min_depth=None,
-         max_depth=None):
+         drop_field_names=None, drop_field_values=None,
+         drop_node_names=None, min_depth=None, max_depth=None):
     """
     Adapted from ast.dump, original: https://github.com/python/cpython/blob/master/Lib/ast.py#L88
     """
@@ -54,6 +59,8 @@ def dump(node, annotate_fields=True, include_attributes=False,
         drop_field_names = set()
     if drop_field_values is None:
         drop_field_values = set()
+    if drop_node_names is None:
+        drop_node_names = set()
     def name(node):
         return node.__class__.__name__
     def _format(node, depth):
@@ -68,8 +75,7 @@ def dump(node, annotate_fields=True, include_attributes=False,
                  if field[0] not in drop_field_names and
                     field[1] not in drop_field_values)
                 if annotate_fields else
-                (b for a, b in fields)
-            ))
+                (b for a, b in fields)))
             if include_attributes and node._attributes:
                 rv += fields and ', ' or ' '
                 rv += ', '.join('%s=%s' % (a, _format(getattr(node, a), depth+1))
@@ -84,6 +90,8 @@ def dump(node, annotate_fields=True, include_attributes=False,
         raise TypeError('expected AST, got %r' % name(node))
     for subtree, _ in preorder(node):
         if min_depth is not None and not has_depth_at_least(subtree, min_depth):
+            continue
+        if name(subtree) in drop_node_names:
             continue
         yield _format(subtree, 0)
 
