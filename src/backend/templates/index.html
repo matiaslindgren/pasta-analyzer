@@ -1,12 +1,43 @@
 {% extends 'layout.html' %}
 
-{% block head_script_includes %}
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
+{% block body_content %}
+
+<form action="{{ url_for('parse') }}" method="GET">
+    <textarea class="form-control" rows="10" name="spaghetti">{{ previous_input }}</textarea>
+    <br>
+    <button class="btn btn-default btn-lg btn-block" type="submit">
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
+</form>
+
+{% if not is_index_page %}
+  {% if errors %}
+  <div class="validation-feedback">
+    <p>The above code has at least one syntax error:</p>
+    <pre>{{ errors }}</pre>
+  </div>
+  {% elif not similar %}
+  <div class="validation-feedback">
+    <p>No results found for the submitted code</p>
+  </div>
+  {% else %}
+  <div class="search-results">
+    <ul style="list-style-type:none">
+    {% for match in similar %}
+      <li>
+        <div class="result">
+          <div class="result-metadata">
+            <p><a href="{{ match.url }}">{{ match.title }}</a></p>
+            <small>{{ match.url }}</small>
+          </div>
+          {{ match.source_html_highlighted|safe }}
+        </div>
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+{% endif %}
+
 {% endblock %}
 
-{% block body_content %}
-<form action="{{ url_for('parse') }}" method="GET">
-    <textarea rows="12" cols="64" name="spaghetti"></textarea>
-    <input type="submit" name="submit" value="Search">
-</form>
-{% endblock %}
