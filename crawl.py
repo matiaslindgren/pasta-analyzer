@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 import json
 import sys
@@ -43,23 +42,23 @@ for output in map(spider_output_path, spiders):
 
 index_path = os.path.join(start_path, data_dir, settings.INDEX_DIRNAME)
 print("Building index")
-if os.path.exists(index_path):
-    print("Previous index exists, removing {}".format(index_path))
-    shutil.rmtree(index_path)
+if not os.path.exists(index_path):
+    print("Previous index does not exist at '{}', creating".format(index_path))
+    indexer.create_new_index(
+        index_path,
+        settings.INDEX_NAME,
+        settings.TOKENIZER_OPTIONS
+    )
+else:
+    print("Previous index exists, loading '{}'".format(index_path))
 
-print("Create index")
-indexer.create_new_index(
+index = indexer.Index(
     index_path,
     settings.INDEX_NAME,
     settings.TOKENIZER_OPTIONS
 )
 
 print("Add crawled output to index")
-index = indexer.Index(
-    index_path,
-    settings.INDEX_NAME,
-    settings.TOKENIZER_OPTIONS
-)
 for data in scraped_data:
     index.add_documents(data)
 
