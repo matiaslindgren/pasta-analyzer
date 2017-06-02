@@ -39,7 +39,7 @@ if __name__ == "__main__":
     get_head = ["git", "rev-parse", "HEAD"]
     with open(REPOS_DATA_JSON) as f:
         repos_data = json.load(f)
-    for repo in repos_data[2:]:
+    for repo in repos_data:
         repo_name = repo['name']
         repo_path = os.path.join(REPOS_PATH, repo_name)
         if not os.path.exists(repo_path):
