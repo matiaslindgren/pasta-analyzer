@@ -42,13 +42,30 @@ class Index:
         self.name = name
         self.tokenizer_options = tokenizer_options
 
+    def valid_content(self, content):
+        try:
+            ast.parse(content)
+        except SyntaxError:
+            return False
+        return True
+
     def add_document(self, data):
+        if not self.valid_content(data['content']):
+            return False
+        writer = self.index.writer()
+        writer.add_document(title=data['title'], url=data['url'], content=data['content'])
+        writer.commit()
+        return True
+
+    def add_documents(self, data):
         writer = self.index.writer()
         for code in data['code_snippets']:
+            if not self.valid_content(code):
+                continue
             writer.add_document(title=data['title'], url=data['url'], content=code)
         writer.commit()
 
-    def update_document(self, data):
+    def update_documents(self, data):
         writer = self.index.writer()
         for code in data['code_snippets']:
             writer.update_document(title=data['title'], url=data['url'], content=code)
