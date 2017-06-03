@@ -39,6 +39,26 @@ def count_all_python_lines(root):
     return int(stdout.split("Python")[-1].splitlines()[0].split(",")[-1])
 
 
+def count_all_repositories(root):
+    assert os.path.exists(root)
+    command = "find {} -type d -name '.git' | wc -l".format(root)
+    print(command)
+    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE)
+    return int(result.stdout.strip())
+
+
+def save_metadata(cloned_destination, metadata_destination):
+    assert os.path.exists(cloned_destination)
+    assert os.path.exists(os.path.dirname(metadata_destination))
+    python_line_count = count_all_python_lines(cloned_destination)
+    repository_count = count_all_repositories(cloned_destination)
+    data = {"python_line_count": python_line_count,
+            "repo_count": repository_count}
+    with open(metadata_destination, "w") as f:
+        json.dump(data, f)
+    return python_line_count, repository_count
+
+
 if __name__ == "__main__":
     repo_data_file = os.path.join(".", "repo_data.json")
 
@@ -79,10 +99,9 @@ if __name__ == "__main__":
 
     print()
     print("all repos cloned")
-    print("counting amount of Python lines in '{}'".format(cloned_destination))
-    python_line_count = count_all_python_lines(cloned_destination)
-    cloned_meta = os.path.join(cloned_destination, "meta.json")
-    print("{} lines of Python code, saving result to '{}'".format(python_line_count, cloned_meta))
-    with open("meta.json", "w") as f:
-        json.dump({"python_line_count": python_line_count}, f)
+    metadata_destination = os.path.join("src", "backend", "cloned_meta.json")
+    print("saving meta data into '{}'".format(metadata_destination))
+    python_line_count, repository_count = save_metadata(metadata_destination, cloned_destination)
+    print("{} repositories at '{}'".format(repository_count, cloned_destination))
+    print("containing {} lines of Python code".format(python_line_count))
 
