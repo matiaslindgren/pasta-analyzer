@@ -60,6 +60,36 @@ div.content {
   text-align: center;
 }
 
+div.content>div.text-container {
+  text-align: justify;
+  margin-top: 30px;
+  padding-left: 80px;
+  padding-right: 80px;
+}
+
+.navbar .navbar-nav {
+  display: inline-block;
+  float: none;
+  vertical-align: top;
+}
+
+
+.navbar .navbar-nav>li>a {
+  display: inline-block;
+  float: none;
+  vertical-align: top;
+  padding: 4px;
+}
+
+nav.navbar {
+  text-align: center;
+  min-height: 30px;
+}
+
+div.text-container,
+div.content,
+h1, h2, h3, h4,
+li,
 p,
 small,
 .form-control,
@@ -123,6 +153,10 @@ table.highlighttable tbody tr td.linenos {
   padding-right: 5px;
 }
 
+button.btn>a {
+  color: inherit;
+  text-decoration: none;
+}
 
 
 
