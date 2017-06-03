@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import subprocess
+import shutil
 
 REPOS_PATH = "cloned"
 REPOS_DATA_JSON = "repo_data.json"
@@ -119,8 +120,11 @@ if __name__ == "__main__":
                 else:
                     valid_count += 1
                 print("{} files added to the index, {} files skipped".format(valid_count, skipped_count), end='\r')
+
         print()
         print("parsed and added to the index {} python files with valid syntax".format(valid_count))
+        print("removing cloned repo at '{}'".format(repo_path))
+        shutil.rmtree(repo_path)
         print("repo {} named '{}' done".format(repo_number, repo_name))
         print()
 
