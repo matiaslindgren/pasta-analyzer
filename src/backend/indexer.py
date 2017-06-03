@@ -25,11 +25,40 @@ def all_linenumbers(root):
 
 
 def subsequence_increasing_by_one(seq):
+    """
+    Take elements from seq while their values are increasing and their difference is one.
+    For example: seq = (5, 6, 7, 12, 13, ...) returns [5, 6, 7]
+    """
     return ([seq[0]] +
             [x for _, x in
              itertools.takewhile(
                  lambda t: abs(t[0] - t[1]) == 1,
                  zip(seq, seq[1:]))])
+
+
+def LIS_by_one_starting_index(seq):
+    """
+    Return the index in a sorted seq at which the longest increasing subsequence, that increases by a difference of one, starts.
+    For example: seq = (1, 5, 6, 9, 10, 11, 12, 39, 40)
+    returns 3 because 9, 10, 12 starts at 3
+    """
+    assert seq
+    index = candidate_index = increasing_count = max_increasing_count = 0
+    increasing = True
+    for i in range(1, len(seq)):
+        if seq[i] - seq[i-1] == 1:
+            if not increasing:
+                increasing = True
+                candidate_index = i-1
+            increasing_count += 1
+            if increasing_count > max_increasing_count:
+                max_increasing_count = increasing_count
+                index = candidate_index
+        elif increasing:
+            increasing_count = 0
+            increasing = False
+    return index
+
 
 def content_is_valid_code(content):
     try:
@@ -47,8 +76,6 @@ class Index:
         self.index = open_dir(index_path, name)
         self.name = name
         self.tokenizer_options = tokenizer_options
-        self.query_options = tokenizer_options.copy()
-        self.query_options["min_depth"] = None
 
     def add_document(self, data):
         if not content_is_valid_code(data['content']):
@@ -73,7 +100,7 @@ class Index:
         writer.commit()
 
     def parse_query(self, code_query):
-        subtrees = ast_parser.dump(ast.parse(code_query), **self.query_options)
+        subtrees = ast_parser.dump(ast.parse(code_query), **self.tokenizer_options)
         full_tree = next(subtrees)
         query = Term(u"content", full_tree)
         for subtree in subtrees:
@@ -113,6 +140,10 @@ class Index:
             node_dump = next(dumps, '').encode()
             if node_dump in matched_tokens:
                 line_numbers |= set(all_linenumbers(node))
-        return result_formatter.html_highlight(code, line_numbers), sorted(line_numbers)
+        # Drop scattered matches from the beginning if there is a
+        # larger chunk match in the middle
+        line_numbers = sorted(line_numbers)
+        line_numbers = line_numbers[LIS_by_one_starting_index(line_numbers):]
+        return result_formatter.html_highlight(code, line_numbers), line_numbers
 
 
