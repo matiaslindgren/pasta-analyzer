@@ -31,7 +31,7 @@ def count_all_python_lines(root):
     Run CLOC at root and return the amount of lines of Python code in every file.
     """
     assert os.path.exists(root)
-    command = "cloc --quiet --csv {}".format(root).format(repo_path)
+    command = "cloc --quiet --csv {}".format(root)
     print(command)
     result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE)
     stdout = str(result.stdout, "utf-8")
