@@ -1,5 +1,6 @@
+import os.path
 
-INDEX_DIRNAME = "index"
+INDEX_DIRNAME = os.path.abspath(os.path.join("src", "backend", "index"))
 INDEX_NAME = "simple_index"
 INDEX_MAX_SIZE = int(8e9)
 
