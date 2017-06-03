@@ -50,7 +50,7 @@ if not os.path.exists(index_path):
         settings.TOKENIZER_OPTIONS
     )
 else:
-    print("Previous index exists, loading '{}'".format(index_path))
+    print("Previous index exists at '{}', not creating a new one".format(index_path))
 
 index = indexer.Index(
     index_path,
