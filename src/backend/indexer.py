@@ -114,7 +114,11 @@ class Index:
 
     def get_similar_snippets(self, code):
         for hit in self.get_documents(code):
-            repo, filename = tuple(hit['title'].split(" "))
+            is_python_docs = "docs.python.org" in hit['url']
+            if is_python_docs:
+                repo, filename = "Python Docs", hit['title']
+            else:
+                repo, filename = tuple(hit['title'].split(" "))
             data = {'title': {'repo': repo, 'filename': filename},
                     'url': hit['url']}
             matched_tokens = set(pair[1]
@@ -122,11 +126,13 @@ class Index:
                                  if pair[0] == 'content')
             data['matched_tokens_count'] = len(matched_tokens)
             data['source_html_highlighted'], highlighted_lines = self.highlight_matches(hit['content'], matched_tokens)
-            first_highlighted_range = subsequence_increasing_by_one(highlighted_lines)
-            if len(first_highlighted_range) == 1:
-                data['url'] += "#L{}".format(first_highlighted_range[0])
-            else:
-                data['url'] += "#L{}-L{}".format(first_highlighted_range[0], first_highlighted_range[-1])
+            print("highlighted lines: {}".format(" ".join(map(str,sorted(highlighted_lines)))))
+            if not is_python_docs:
+                first_highlighted_range = subsequence_increasing_by_one(highlighted_lines)
+                if len(first_highlighted_range) == 1:
+                    data['url'] += "#L{}".format(first_highlighted_range[0])
+                else:
+                    data['url'] += "#L{}-L{}".format(first_highlighted_range[0], first_highlighted_range[-1])
             yield data
 
 
