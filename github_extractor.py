@@ -101,7 +101,7 @@ if __name__ == "__main__":
     print("all repos cloned")
     metadata_destination = os.path.join("src", "backend", "cloned_meta.json")
     print("saving meta data into '{}'".format(metadata_destination))
-    python_line_count, repository_count = save_metadata(metadata_destination, cloned_destination)
+    python_line_count, repository_count = save_metadata(cloned_destination, metadata_destination)
     print("{} repositories at '{}'".format(repository_count, cloned_destination))
     print("containing {} lines of Python code".format(python_line_count))
 
