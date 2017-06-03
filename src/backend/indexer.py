@@ -126,7 +126,6 @@ class Index:
                                  if pair[0] == 'content')
             data['matched_tokens_count'] = len(matched_tokens)
             data['source_html_highlighted'], highlighted_lines = self.highlight_matches(hit['content'], matched_tokens)
-            print("highlighted lines: {}".format(" ".join(map(str,sorted(highlighted_lines)))))
             if not is_python_docs:
                 first_highlighted_range = subsequence_increasing_by_one(highlighted_lines)
                 if len(first_highlighted_range) == 1:
