@@ -28,6 +28,13 @@ def parse():
     return flask.render_template("index.html", **render_context)
 
 
+@flask_app.route("/about")
+def about():
+    with flask_app.open_resource("cloned_meta.json", "r") as f:
+        render_context = json.load(f)
+    return flask.render_template("about.html", **render_context)
+
+
 if __name__ == "__main__":
     flask_app.run()
 

@@ -2,17 +2,30 @@
 
 {% block body_content %}
 
+<div class="text-container">
 <h2>This is a search engine</h2>
 <ol>
   <li>Copy paste your Python code</li>
   <li>Get code from GitHub that looks like your code</li>
 </ol>
 
-<p>This search engine does not work in the conventional way of splitting the submitted query string into tokens that can be used to retrieve documents from the database.
-Instead, it parses the submitted code into an abstract syntax tree and uses the nodes of the syntax tree as tokens for retrieving similar syntax trees.
-User defined variable, function, class and function argument names are ignored.
-The index contains currently {{ repo_count }} repositories that amounts to {{ python_line_count }} lines of Python code.
+<p>The submitted code query is parsed into an abstract syntax tree and the nodes, i.e. subtrees, of the syntax tree are used as tokens for retrieving similar syntax trees from the index.
+User defined variable, function, function argument and class names are ignored.
+If you want to find specific functions or classes, regular search engines or the search functionality on GitHub will yield better results.
+The search results from this search engine are usually code that contain a structure that is similar to the submitted query.
+</p>
 
+<p>
+The index currently contains {{ repo_count }} GitHub repositories with a total of {{ python_line_count }} lines of Python code, ignoring comments and lines containing only whitespace.
+</p>
+
+
+<button class="btn btn-default btn-xs">
+  <span class="glyphicon glyphicon-arrow-left"></span>
+  <a href="/">Search something</a>
+</button>
+
+</div>
 
 {% endblock %}
 
