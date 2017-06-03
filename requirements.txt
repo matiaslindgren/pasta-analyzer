@@ -1,3 +1,5 @@
 flask
 scrapy
 whoosh
+pygments
+github3.py
