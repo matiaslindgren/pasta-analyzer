@@ -5,7 +5,7 @@ import result_formatter
 import itertools
 from whoosh.index import exists_in, create_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
-from whoosh.query import Term
+from whoosh.query import Term, Every
 
 
 def create_new_index(path, name, tokenizer_options):
@@ -98,6 +98,15 @@ class Index:
         for code in data['code_snippets']:
             writer.update_document(title=data['title'], url=data['url'], content=code)
         writer.commit()
+
+    def iter_documents(self):
+        with self.index.searcher() as searcher:
+            for result in searcher.search(Every()):
+                yield result
+
+    def __len__(self):
+        with self.index.searcher() as searcher:
+            return searcher.doc_count()
 
     def parse_query(self, code_query):
         subtrees = ast_parser.dump(ast.parse(code_query), **self.tokenizer_options)
