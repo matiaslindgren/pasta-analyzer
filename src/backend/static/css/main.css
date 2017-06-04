@@ -25,15 +25,6 @@ hr {
     padding: 0;
 }
 
-audio,
-canvas,
-iframe,
-img,
-svg,
-video {
-    vertical-align: middle;
-}
-
 fieldset {
     border: 0;
     margin: 0;
