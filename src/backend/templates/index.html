@@ -2,6 +2,7 @@
 
 {% block body_content %}
 
+<h2>Paste some Python code</h2>
 <form action="{{ url_for('parse') }}" method="GET">
   <textarea class="form-control" rows="10" name="spaghetti">{{ previous_input }}</textarea>
   <br>
