@@ -28,12 +28,10 @@ def parse():
     return flask.render_template("index.html", **render_context)
 
 
-# TODO: add LRU caching
 @flask_app.route("/about")
 def about():
     with flask_app.open_resource("cloned_meta.json", "r") as f:
         render_context = json.load(f)
-    render_context["documents"] = len(index)
     return flask.render_template("about.html", **render_context)
 
 
