@@ -3,12 +3,15 @@
 {% block body_content %}
 
 <div class="text-container">
-<h2>This is a search engine</h2>
+<h2>This is a code search engine</h2>
+
+<h4>How do I use it?</h4>
 <ol>
   <li>Copy paste your Python code</li>
-  <li>Get code from GitHub that looks like your code</li>
+  <li>Get code from GitHub repositories and the Python docs that looks like your code</li>
 </ol>
 
+<h4>How does it work?</h4>
 <p>The submitted code query is parsed into an abstract syntax tree and the nodes, i.e. subtrees, of the syntax tree are used as tokens for retrieving similar syntax trees from the index.
 User defined variable, function, function argument and class names are ignored.
 If you want to find specific functions or classes, regular search engines or the search functionality on GitHub will yield better results.
