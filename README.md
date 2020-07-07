@@ -1,3 +1,5 @@
+![Search result page for a given code snippet query showing matching code from a GitHub repository](./spaghetti-search.png)
+
 Work in progress
 
 TODO:

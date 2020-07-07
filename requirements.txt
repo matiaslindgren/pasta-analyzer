@@ -1,5 +1,5 @@
-flask
-scrapy
-whoosh
-pygments
-github3.py
+flask~=0.12.0
+scrapy~=1.4
+whoosh~=2.7.4
+pygments~=2.2.0
+github3.py~=0.9.6
