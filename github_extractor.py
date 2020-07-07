@@ -4,7 +4,7 @@ import github3
 import json
 
 SEARCH_QUERY = "language:python stars:>1 size:>10000"
-SEARCH_PARAMETERS = { "sort": "stars", "number": 100 }
+SEARCH_PARAMETERS = { "sort": "stars", "number": 10 }
 
 
 def hard_prune_repo(repo_path):
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     for repo in repos:
         repo_path = os.path.join(cloned_destination, repo["name"])
         if not os.path.exists(repo_path):
-            command = ["git", "clone", repo["clone_url"], repo_path]
+            command = ["git", "clone", "--depth=1", repo["clone_url"], repo_path]
             print(" ".join(command))
             subprocess.run(command, check=True)
             print()
